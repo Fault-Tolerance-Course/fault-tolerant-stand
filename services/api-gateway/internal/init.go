@@ -86,8 +86,6 @@ func (a *App) initGrpcConn(_ context.Context) error {
 	for _, srv := range []string{config.AdService, config.OrderService} {
 		var err error
 
-		slog.Info(config.Instance().Targets[srv])
-
 		conn, err := grpc.NewClient(config.Instance().Targets[srv],
 			grpc.WithTransportCredentials(insecure.NewCredentials()))
 

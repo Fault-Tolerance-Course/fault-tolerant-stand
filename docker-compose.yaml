@@ -16,6 +16,8 @@ services:
     depends_on:
       - order-service
       - ad-service
+    deploy:
+      replicas: 3
     networks:
       - app-network
 
@@ -251,21 +253,6 @@ services:
       - "8090:8080"
     links:
       - kafka
-    networks:
-      - app-network
-
-  kafka-ui:
-    image: provectuslabs/kafka-ui
-    container_name: kafka-ui
-    depends_on:
-      - kafka
-    ports:
-      - "7777:8080"
-    restart: always
-    environment:
-      - KAFKA_CLUSTERS_0_NAME=kafka
-      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9093
-      - KAFKA_CLUSTERS_0_ZOOKEEPER=zookeeper:2181
     networks:
       - app-network
 

@@ -1,0 +1,126 @@
+syntax = "proto3";
+
+package api_gateway.ad.v1;
+
+option go_package = "api_gateway/pkg/ad/v1;adV1";
+
+import "google/type/money.proto";
+import "google/type/decimal.proto";
+import "google/protobuf/timestamp.proto";
+
+import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+  info: {
+    title: "Advertisement"
+    description: "Advertisement application"
+    version: "1.0"
+  }
+};
+
+service AdService {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_tag) = {name: "advertisement"};
+
+  // Получить объявление по идентификатору
+  rpc GetAd(GetAdRequest) returns (GetAdResponse) {
+    option (google.api.http) = {
+      get: "/v1/ad"
+    };
+  }
+
+  // Список объявлений
+  rpc ListAds(ListAdsRequest) returns(ListAdsResponse){
+    option (google.api.http) = {
+      get: "/v1/ads"
+    };
+  }
+
+  // Создать объявление
+  rpc CreateAd(CreateAdRequest) returns (CreateAdResponse){
+    option (google.api.http) = {
+      post: "/v1/ad"
+    };
+  }
+
+  // Деактивировать объявление
+  rpc Deactivate(DeactivateRequest) returns (DeactivateResponse){
+    option (google.api.http) = {
+      post: "/v1/ad/deactivate"
+    };
+  }
+}
+
+message GetAdRequest{
+  string ad_id = 1;
+}
+
+message GetAdResponse{
+  Ad ad = 1;
+
+  message Ad {
+    string id = 1;           // Уникальный идентификатор
+    string title = 2;        // Заголовок
+    string category = 3;     // Категория
+    string author_id = 4;    // ID автор
+    google.type.Money price = 5; // Цена
+    string status = 6;       // Статус (active, sold, banned)
+    google.protobuf.Timestamp created_at = 7;   // Дата создания (ISO 8601)
+    // Рейтинг по оценкам объявления
+    AdReview review = 8;
+
+    message AdReview {
+      google.type.Decimal avg_review = 1;
+    }
+  }
+}
+
+
+message ListAdsRequest{}
+
+message ListAdsResponse{
+  repeated Ad ads = 1;
+
+  message Ad {
+    string id = 1;           // Уникальный идентификатор
+    string title = 2;        // Заголовок
+    string description = 3;  // Описание
+    string category = 4;     // Категория
+    string author_id = 5;    // ID автор
+    google.type.Money price = 6; // Цена
+    string status = 7;       // Статус (active, sold, banned)
+    google.protobuf.Timestamp created_at = 8;   // Дата создания (ISO 8601)
+  }
+}
+
+message CreateAdRequest {
+  // Заголовок
+  string title = 1;
+  // Категория
+  string category = 2;
+  // ID автор
+  string author_id = 3;
+  // Цена
+  google.type.Money price = 4;
+}
+
+message CreateAdResponse {
+  Ad ad  = 1;
+  // Уникальный идентификатор
+  message Ad {
+    // Уникальный идентификатор
+    string id = 1;
+    // Статус (active, inactive, banned)
+    string status = 2;
+  }
+}
+
+message DeactivateRequest{
+  // Уникальный идентификатор
+  string id = 1;
+}
+
+message DeactivateResponse{
+  // Статус (active, inactive)
+  string status = 1;
+}

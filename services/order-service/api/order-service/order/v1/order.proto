@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package order_service.order.v1;
+
+option go_package = "order-service/pkg/order/v1;orderV1";
+
+import "google/type/money.proto";
+import "google/type/decimal.proto";
+import "google/protobuf/timestamp.proto";
+
+service OrderService {
+  rpc CreateOrder(CreateOrderRequest) returns (CreateOrderResponse);
+}
+
+message CreateOrderRequest {
+  Order order = 1;
+
+  message Order {
+    // Уникальный идентификатор
+    string ad_id = 1;
+    // Категория
+    string category = 4;
+    // Идентификатор клиента
+    string client_id = 5;
+    // Стоимость
+    google.type.Money price = 6;
+  }
+}
+
+message CreateOrderResponse {
+  Details details = 1;
+
+  message Details {
+    // идентификатор заказа
+    string order_id = 1;
+    // статус заказа
+    string order_status = 2;
+  }
+}

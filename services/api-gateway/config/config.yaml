@@ -1,0 +1,13 @@
+graceful:
+  timeout: 5s
+
+grpc_server:
+  host: 0.0.0.0
+  port: 7002
+  max_connection_idle: 5m
+  max_connection_age: 5m
+  timeout: 5s
+  time: 120m
+
+http_server:
+  port: 8082

@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package review_service.review.v1;
+
+option go_package = "review/pkg/review/v1;reviewV1";
+
+import "google/type/decimal.proto";
+
+service ReviewService {
+  // Получить отзыв по одному объявлению
+  rpc GetAdReview(GetAdReviewRequest) returns (GetAdReviewResponse);
+}
+
+message GetAdReviewRequest {
+  // Уникальный идентификатор
+  string ad_id = 1;
+}
+
+message GetAdReviewResponse {
+  Review review = 1;
+
+  message Review{
+    google.type.Decimal avg_review = 1;
+  }
+}

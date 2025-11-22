@@ -1,0 +1,107 @@
+syntax = "proto3";
+
+package ad_service.ad.v1;
+
+option go_package = "ad-service/pkg/ad/v1;adV1";
+
+import "google/type/money.proto";
+import "google/type/decimal.proto";
+import "google/protobuf/timestamp.proto";
+
+service AdService {
+  // Список объявлений
+  rpc ListAds(ListAdsRequest) returns(ListAdsResponse);
+  // получить объявление по id
+  rpc GetAd(GetAdRequest) returns (GetAdResponse);
+  // создать объявление
+  rpc CreateAd(CreateAdRequest) returns (CreateAdResponse);
+  // снять видимость
+  rpc Deactivate(DeactivateRequest) returns (DeactivateResponse);
+}
+
+
+message CreateAdRequest{
+  // Заголовок
+  string title = 1;
+  // Категория
+  string category = 2;
+  // ID автор
+  string author_id = 3;
+  // Цена
+  google.type.Money price = 4;
+}
+
+message CreateAdResponse{
+  Ad ad  = 1;
+  // Уникальный идентификатор
+  message Ad {
+    // Уникальный идентификатор
+    string id = 1;
+    // Статус (active, inactive, banned)
+    string status = 2;
+  }
+}
+
+message DeactivateRequest{
+  // Уникальный идентификатор
+  string id = 1;
+}
+
+message DeactivateResponse{
+  // Статус (active, inactive)
+  string status = 1;
+}
+
+message ListAdsRequest{}
+
+message ListAdsResponse{
+  repeated Ad ads = 1;
+
+  message Ad {
+    // Уникальный идентификатор
+    string id = 1;
+    // Заголовок
+    string title = 2;
+    // Категория
+    string category = 3;
+    // ID автор
+    string author_id = 4;
+    // Цена
+    google.type.Money price = 5;
+    // Статус (active, inactive)
+    string status = 6;
+    // Дата создания (ISO 8601)
+    google.protobuf.Timestamp created_at = 7;
+  }
+}
+
+message GetAdRequest{
+  string  ad_id = 1;
+}
+
+message GetAdResponse{
+  Ad ad = 1;
+
+  message Ad {
+    // Уникальный идентификатор
+    string id = 1;
+    // Заголовок
+    string title = 2;
+    // Категория
+    string category = 3;
+    // ID автор
+    string author_id = 4;
+    // Цена
+    google.type.Money price = 5;
+    // Статус (active, sold, banned)
+    string status = 6;
+    // Дата создания (ISO 8601)
+    google.protobuf.Timestamp created_at = 7;
+    // Рейтинг по оценкам объявления
+    AdReview review = 8;
+  }
+
+  message AdReview {
+    google.type.Decimal avg_review = 1;
+  }
+}

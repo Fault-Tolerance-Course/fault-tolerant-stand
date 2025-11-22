@@ -1,0 +1,182 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Advertisement",
+    "description": "Advertisement application",
+    "version": "1.0"
+  },
+  "tags": [
+    {
+      "name": "orders"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v1/order": {
+      "post": {
+        "summary": "Создать заказ",
+        "operationId": "OrderService_CreateOrder",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/api_gateway.order.v1.CreateOrderResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/google.rpc.Status"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "order.adId",
+            "description": "Уникальный идентификатор",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "order.category",
+            "description": "Категория",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "order.clientId",
+            "description": "Идентификатор клиента",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "order.price.currencyCode",
+            "description": "The three-letter currency code defined in ISO 4217.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "order.price.units",
+            "description": "The whole units of the amount.\nFor example if `currencyCode` is `\"USD\"`, then 1 unit is one US dollar.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "order.price.nanos",
+            "description": "Number of nano (10^-9) units of the amount.\nThe value must be between -999,999,999 and +999,999,999 inclusive.\nIf `units` is positive, `nanos` must be positive or zero.\nIf `units` is zero, `nanos` can be positive, zero, or negative.\nIf `units` is negative, `nanos` must be negative or zero.\nFor example $-1.75 is represented as `units`=-1 and `nanos`=-750,000,000.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "orders"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "api_gateway.order.v1.CreateOrderRequest.Order": {
+      "type": "object",
+      "properties": {
+        "adId": {
+          "type": "string",
+          "title": "Уникальный идентификатор"
+        },
+        "category": {
+          "type": "string",
+          "title": "Категория"
+        },
+        "clientId": {
+          "type": "string",
+          "title": "Идентификатор клиента"
+        },
+        "price": {
+          "$ref": "#/definitions/google.type.Money",
+          "title": "Стоимость"
+        }
+      }
+    },
+    "api_gateway.order.v1.CreateOrderResponse": {
+      "type": "object",
+      "properties": {
+        "details": {
+          "$ref": "#/definitions/api_gateway.order.v1.CreateOrderResponse.Details"
+        }
+      }
+    },
+    "api_gateway.order.v1.CreateOrderResponse.Details": {
+      "type": "object",
+      "properties": {
+        "orderId": {
+          "type": "string",
+          "title": "идентификатор заказа"
+        },
+        "orderStatus": {
+          "type": "string",
+          "title": "статус заказа"
+        }
+      }
+    },
+    "google.protobuf.Any": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "google.rpc.Status": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/google.protobuf.Any"
+          }
+        }
+      }
+    },
+    "google.type.Money": {
+      "type": "object",
+      "properties": {
+        "currencyCode": {
+          "type": "string",
+          "description": "The three-letter currency code defined in ISO 4217."
+        },
+        "units": {
+          "type": "string",
+          "format": "int64",
+          "description": "The whole units of the amount.\nFor example if `currencyCode` is `\"USD\"`, then 1 unit is one US dollar."
+        },
+        "nanos": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Number of nano (10^-9) units of the amount.\nThe value must be between -999,999,999 and +999,999,999 inclusive.\nIf `units` is positive, `nanos` must be positive or zero.\nIf `units` is zero, `nanos` can be positive, zero, or negative.\nIf `units` is negative, `nanos` must be negative or zero.\nFor example $-1.75 is represented as `units`=-1 and `nanos`=-750,000,000."
+        }
+      },
+      "description": "Represents an amount of money with its currency type."
+    }
+  }
+}

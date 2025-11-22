@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+package api_gateway.order.v1;
+
+option go_package = "api_gateway/pkg/order/v1;orderV1";
+
+import "google/type/money.proto";
+import "google/type/decimal.proto";
+import "google/protobuf/timestamp.proto";
+
+import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+  info: {
+    title: "Advertisement"
+    description: "Advertisement application"
+    version: "1.0"
+  }
+};
+
+service OrderService {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_tag) = {name: "orders"};
+
+  // Создать заказ
+  rpc CreateOrder(CreateOrderRequest) returns (CreateOrderResponse){
+    option (google.api.http) = {
+      post: "/v1/order"
+    };
+  }
+}
+
+message CreateOrderRequest {
+  Order order = 1;
+
+  message Order {
+    // Уникальный идентификатор
+    string ad_id = 1;
+    // Категория
+    string category = 4;
+    // Идентификатор клиента
+    string client_id = 5;
+    // Стоимость
+    google.type.Money price = 6;
+  }
+}
+
+message CreateOrderResponse {
+  Details details = 1;
+
+  message Details {
+    // идентификатор заказа
+    string order_id = 1;
+    // статус заказа
+    string order_status = 2;
+  }
+}

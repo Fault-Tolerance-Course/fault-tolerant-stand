@@ -1,0 +1,28 @@
+graceful:
+  timeout: 5s
+
+grpc_server:
+  host: 0.0.0.0
+  port: 7008
+  max_connection_idle: 5m
+  max_connection_age: 5m
+  timeout: 5s
+  time: 120m
+
+http_server:
+  port: 8082
+
+kafka:
+  brokers: [ "kafka:9092" ]
+
+postgres:
+  host: order-postgres
+  port: 5432
+  user: postgres
+  password: "postgres"
+  database: orders
+  max_connections: 10
+  min_connections: 3
+  min_idle_connections: 3
+  max_con_lifetime: 5s
+

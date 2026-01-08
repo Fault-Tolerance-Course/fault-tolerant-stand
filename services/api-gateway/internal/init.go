@@ -138,8 +138,6 @@ func (a *App) initHealthCheck(_ context.Context) error {
 		return fmt.Errorf("application is terminating now")
 	})
 
-	// чтобы при смерти readiness проба выводила под из балансировки
-	// некая форма обратной связи
 	a.publicCloser.Add(func() error {
 		slog.Warn(fmt.Sprintf("app got termination signal, graceful config timeout: %s",
 			config.Instance().Graceful.Timeout.String()))

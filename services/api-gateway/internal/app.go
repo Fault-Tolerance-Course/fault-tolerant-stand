@@ -10,6 +10,7 @@ import (
 
 	"api-gateway/config"
 	"api-gateway/internal/pkg/closer"
+	"api-gateway/internal/pkg/healthcheck"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/not-for-prod/clay/server"
@@ -29,7 +30,11 @@ type App struct {
 
 	grpcConn map[string]grpc.ClientConnInterface
 
-	started atomic.Bool
+	started    int32
+	terminated int32
+
+	// обработчик health check probe
+	healthCheck healthcheck.Handler
 }
 
 // New конструктор
@@ -56,7 +61,7 @@ func (a *App) Run(_ context.Context) {
 	}
 
 	// start signal
-	a.started.Store(true)
+	atomic.StoreInt32(&a.started, 1)
 
 	slog.Info(fmt.Sprintf("APP STARTED ON PORTS => HTTP: %d, GRPC: %d",
 		config.Instance().GrpcServer.Port,
@@ -70,6 +75,7 @@ func (a *App) Run(_ context.Context) {
 
 func (a *App) init(ctx context.Context) error {
 	initFuncs := []func(context.Context) error{
+		a.initHealthCheck,
 		a.initMainServer,
 		a.initGrpcConn,
 		a.initControllers,

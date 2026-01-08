@@ -4,8 +4,13 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"runtime"
+	"sync/atomic"
 
 	"api-gateway/config"
+	"api-gateway/internal/pkg/healthcheck"
+
+	chimw "github.com/go-chi/chi/v5/middleware"
 
 	"api-gateway/internal/app/ad/v1"
 	"api-gateway/internal/app/order/v1"
@@ -19,8 +24,10 @@ import (
 	externalOrderV1 "api-gateway/internal/pkg/pb/external/order-service/order/v1"
 
 	"github.com/go-chi/chi/v5"
+
 	"github.com/not-for-prod/clay/server"
 	"github.com/not-for-prod/clay/transport"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/keepalive"
@@ -40,6 +47,12 @@ func (a *App) initControllers(_ context.Context) error {
 
 func (a *App) initMainServer(ctx context.Context) error {
 	a.mux = chi.NewMux()
+	a.mux.Mount("/debug", chimw.Profiler())
+
+	// register healthcheck
+	a.mux.HandleFunc(healthcheck.LivenessPath, a.healthCheck.LiveEndpoint)
+	a.mux.HandleFunc(healthcheck.ReadinessPath, a.healthCheck.ReadyEndpoint)
+
 	// init server (htt,grpc)
 	a.mainServer = server.NewServer(
 		config.Instance().GrpcServer.Port,
@@ -96,5 +109,43 @@ func (a *App) initGrpcConn(_ context.Context) error {
 		a.grpcConn[srv] = conn
 		closer.Add(conn.Close)
 	}
+	return nil
+}
+
+func (a *App) initHealthCheck(_ context.Context) error {
+	a.healthCheck = healthcheck.NewHandler()
+
+	// поверяю, что нет утечки горутин на старте (как пример)
+	a.healthCheck.AddLivenessCheck("goroutines", func() error {
+		if runtime.NumGoroutine() < 1000 {
+			return nil
+		}
+		return fmt.Errorf("application has too much running goroutines")
+	})
+
+	// readiness - т.к. я уже проинициализировал все компоненты
+	a.healthCheck.AddReadinessCheck("started", func() error {
+		if atomic.LoadInt32(&a.started) != 0 {
+			return nil
+		}
+		return fmt.Errorf("application is not statred yet")
+	})
+
+	a.healthCheck.AddReadinessCheck("termination", func() error {
+		if atomic.LoadInt32(&a.terminated) == 0 {
+			return nil
+		}
+		return fmt.Errorf("application is terminating now")
+	})
+
+	// чтобы при смерти readiness проба выводила под из балансировки
+	// некая форма обратной связи
+	a.publicCloser.Add(func() error {
+		slog.Warn(fmt.Sprintf("app got termination signal, graceful config timeout: %s",
+			config.Instance().Graceful.Timeout.String()))
+
+		atomic.StoreInt32(&a.terminated, 1)
+		return nil
+	})
 	return nil
 }

@@ -18,6 +18,16 @@ services:
       - ad-service
     deploy:
       replicas: 3
+    healthcheck:
+      test: ["CMD-SHELL", "/tmp/healthcheck.sh"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    volumes:
+       - ./deploy/scripts/api-gateway-probes.sh:/tmp/api-gateway-probes.sh:ro
+    labels:
+      - autoheal=true
     networks:
       - app-network
 
@@ -112,10 +122,24 @@ services:
       - ./deploy/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
       api-gateway:
-        condition: service_started
+        condition: service_healthy
         restart: true
     networks:
      - app-network
+
+  autoheal:
+    image: willfarrell/autoheal:1.2.0 # Use a specific version, e.g., 1.2.0
+    restart: unless-stopped
+    # Mount the Docker socket to allow autoheal to interact with the Docker daemon
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    # Optional: Configure autoheal behavior via environment variables
+    environment:
+      # Watch only containers with the label autoheal=true (default setting)
+      - AUTOHEAL_CONTAINER_LABEL=autoheal
+      # Set to "all" to monitor all containers without a specific label
+      # - AUTOHEAL_CONTAINER_LABEL=all
+      - AUTOHEAL_INTERVAL=5 # Check every 5 seconds
 
 ###########################################
 #             DATABASES                   #

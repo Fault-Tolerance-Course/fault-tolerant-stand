@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"net"
 	"runtime"
 	"sync/atomic"
 
@@ -46,17 +47,9 @@ func (a *App) initControllers(_ context.Context) error {
 }
 
 func (a *App) initMainServer(ctx context.Context) error {
-	a.mux = chi.NewMux()
-	a.mux.Mount("/debug", chimw.Profiler())
-
-	// register healthcheck
-	a.mux.HandleFunc(healthcheck.LivenessPath, a.healthCheck.LiveEndpoint)
-	a.mux.HandleFunc(healthcheck.ReadinessPath, a.healthCheck.ReadyEndpoint)
-
 	// init server (htt,grpc)
 	a.mainServer = server.NewServer(
 		config.Instance().GrpcServer.Port,
-		server.WithHTTPMux(a.mux),
 		server.WithHTTPPort(config.Instance().HttpServer.Port),
 		server.WithGRPCOpts(
 			grpc.KeepaliveParams(keepalive.ServerParameters{
@@ -91,6 +84,31 @@ func (a *App) initMainServer(ctx context.Context) error {
 		}
 		return nil
 	})
+
+	return nil
+}
+
+func (a *App) initAdminServer(ctx context.Context) error {
+	// init admin listener
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%v", config.Instance().HttpServer.AdminPort))
+	if err != nil {
+		return fmt.Errorf("failed to init admin listener: %w", err)
+	}
+
+	a.adminListener = lis
+
+	// init healthcheck for admin server
+	if err = a.initHealthCheck(ctx); err != nil {
+		return fmt.Errorf("failed to init healthcheck: %w", err)
+	}
+
+	a.adminMux = chi.NewMux()
+
+	a.adminMux.Mount("/debug", chimw.Profiler())
+
+	// register healthcheck
+	a.adminMux.HandleFunc(healthcheck.LivenessPath, a.healthCheck.LiveEndpoint)
+	a.adminMux.HandleFunc(healthcheck.ReadinessPath, a.healthCheck.ReadyEndpoint)
 
 	return nil
 }

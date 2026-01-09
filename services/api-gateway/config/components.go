@@ -12,7 +12,8 @@ type GrpcServer struct {
 }
 
 type HttpServer struct {
-	Port int `yaml:"port" env:"HTTP_PORT"`
+	Port      int `yaml:"port" env:"HTTP_PORT"`
+	AdminPort int `yaml:"admin_port" env:"ADMIN_HTTP_PORT"`
 }
 
 type Graceful struct {

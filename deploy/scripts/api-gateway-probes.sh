@@ -1,5 +1,3 @@
-#!/bin/bash
-
 if ! wget --no-verbose --tries=1 --timeout=3 --spider http://localhost:8080/healthcheck/live; then
     echo "Liveness check FAILED"
     exit 1

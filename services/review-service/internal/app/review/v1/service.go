@@ -8,6 +8,8 @@ import (
 type Implementation struct {
 	reviewV1.UnimplementedReviewServiceServer
 	services *service.Registry
+
+	requestCounter uint64 // atomic counter
 }
 
 func NewReviewService(services *service.Registry) *Implementation {

@@ -11,6 +11,10 @@ import (
 	"api-gateway/config"
 	"api-gateway/internal/pkg/healthcheck"
 
+	"api-gateway/internal/pkg/http/middleware/timeout"
+
+	"api-gateway/internal/pkg/retry"
+
 	chimw "github.com/go-chi/chi/v5/middleware"
 
 	"api-gateway/internal/app/ad/v1"
@@ -47,9 +51,15 @@ func (a *App) initControllers(_ context.Context) error {
 }
 
 func (a *App) initMainServer(ctx context.Context) error {
+	a.mainMux = chi.NewMux()
+
+	// используем middleware для установки timeout'а на обработку запроса
+	a.mainMux.Use(timeout.Middleware)
+
 	// init server (htt,grpc)
 	a.mainServer = server.NewServer(
 		config.Instance().GrpcServer.Port,
+		server.WithHTTPMux(a.mainMux),
 		server.WithHTTPPort(config.Instance().HttpServer.Port),
 		server.WithGRPCOpts(
 			grpc.KeepaliveParams(keepalive.ServerParameters{
@@ -118,7 +128,8 @@ func (a *App) initGrpcConn(_ context.Context) error {
 		var err error
 
 		conn, err := grpc.NewClient(config.Instance().Targets[srv],
-			grpc.WithTransportCredentials(insecure.NewCredentials()))
+			grpc.WithTransportCredentials(insecure.NewCredentials()),
+			grpc.WithUnaryInterceptor(retry.NewRetry(config.Instance().Retry).UnaryClientInterceptor()))
 
 		if err != nil {
 			return fmt.Errorf("не удалось инициализировать grpc соединение к %s : %s", srv, err.Error())

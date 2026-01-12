@@ -11,3 +11,17 @@ grpc_server:
 
 http_server:
   port: 8082
+
+retry:
+  handlers:
+  - method: "/order_service.order.v1.OrderService/CreateOrder"
+    enabled: true
+    max_attempts: 3
+    initial_backoff: 50m # не слишком большой, и не слишком маленький
+    max_backoff: 1s
+    backoff_multiplier: 2.0 # классический экспоненциальный
+    throttler:
+      throttling_enabled: true
+      throttle_max_tokens: 10 # бюджет
+      throttle_token_ratio: 0.1 # refill (пополнение после успешного rpc)
+    # коды использует по-умолчанию

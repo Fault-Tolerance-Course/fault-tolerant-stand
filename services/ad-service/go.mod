@@ -44,9 +44,11 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/samber/lo v1.52.0 // indirect
 	github.com/soheilhy/cmux v0.1.5 // indirect
+	github.com/sony/gobreaker/v2 v2.4.0 // indirect
 	github.com/swaggo/files v1.0.1 // indirect
 	github.com/swaggo/http-swagger v1.3.4 // indirect
 	github.com/swaggo/swag v1.16.6 // indirect
+	gitlab.com/NebulousLabs/fastrand v0.0.0-20181126182046-603482d69e40 // indirect
 	golang.org/x/crypto v0.42.0 // indirect
 	golang.org/x/mod v0.28.0 // indirect
 	golang.org/x/net v0.44.0 // indirect

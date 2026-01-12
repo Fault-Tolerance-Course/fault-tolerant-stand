@@ -7,6 +7,9 @@ import (
 	"strings"
 	"sync"
 
+	"ad-service/internal/pkg/circuit"
+	"ad-service/internal/pkg/hedge"
+
 	"github.com/ilyakaznacheev/cleanenv"
 )
 
@@ -23,6 +26,9 @@ type Config struct {
 	GrpcServer GrpcServer `yaml:"grpc_server"`
 	HttpServer HttpServer `yaml:"http_server"`
 	Postgres   Postgres   `yaml:"postgres"`
+
+	Hedge   hedge.Config   `yaml:"hedge"`
+	Circuit circuit.Config `json:"circuit"`
 
 	Graceful Graceful          `yaml:"graceful"`
 	Targets  map[string]string `yaml:"service"`

@@ -7,6 +7,7 @@ import (
 
 	"review/config"
 	review "review/internal/app/review/v1"
+	"review/internal/pkg/grpc/intercept"
 	reviewV1 "review/internal/pkg/pb/review-service/review/v1"
 
 	"review/internal/application/service"
@@ -54,6 +55,7 @@ func (a *App) initMainServer(ctx context.Context) error {
 				Time:              config.Instance().GrpcServer.Time,
 				Timeout:           config.Instance().GrpcServer.Timeout,
 			}),
+			grpc.ChainUnaryInterceptor(intercept.ErrorInterceptor()),
 		),
 	)
 

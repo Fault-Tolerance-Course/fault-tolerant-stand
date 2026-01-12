@@ -15,6 +15,8 @@ func (i *Implementation) CreateOrder(ctx context.Context, req *orderV1.CreateOrd
 			ClientId: req.GetOrder().GetClientId(),
 			Price:    req.GetOrder().GetPrice(),
 		},
+		IdempotencyKey: req.GetIdempotencyKey(),
+		OrdersVersion:  req.GetOrdersVersion(),
 	})
 	if err != nil {
 		return nil, err
@@ -25,5 +27,6 @@ func (i *Implementation) CreateOrder(ctx context.Context, req *orderV1.CreateOrd
 			OrderId:     response.GetDetails().GetOrderId(),
 			OrderStatus: response.GetDetails().GetOrderStatus(),
 		},
+		OrdersVersion: response.GetOrdersVersion(),
 	}, nil
 }

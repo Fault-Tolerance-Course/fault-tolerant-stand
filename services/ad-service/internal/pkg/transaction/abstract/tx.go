@@ -29,7 +29,6 @@ func (tx *Tx) Commit() error {
 	if tx.tx == nil {
 		return nil
 	}
-	tx.tx = nil
 	return tx.tx.Commit()
 }
 
@@ -37,7 +36,6 @@ func (tx *Tx) Rollback() error {
 	if tx.tx == nil {
 		return nil
 	}
-	tx.tx = nil
 	return tx.tx.Rollback()
 }
 

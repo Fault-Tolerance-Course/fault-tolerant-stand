@@ -6,7 +6,8 @@ import (
 	"time"
 
 	"order-service/config"
-	commondto "order-service/internal/application/dto"
+	"order-service/internal/domain/entity"
+
 	"order-service/internal/pkg/event"
 
 	"order-service/internal/pkg/pipe"
@@ -21,14 +22,14 @@ type OrderCreatedEvent struct {
 	AdID      string    `json:"ad_id"`
 }
 
-func New(order *commondto.Order) pipe.Func[event.Events] {
+func New(order *entity.Order) pipe.Func[event.Events] {
 	return func(ctx context.Context, events event.Events) (event.Events, error) {
 		// формируем событие
 		body, err := json.Marshal(&OrderCreatedEvent{
 			ID:        order.ID().String(),
 			Status:    string(order.Status()),
 			Price:     order.Price().String(),
-			ClientID:  order.ClientID(),
+			ClientID:  order.ClientID().String(),
 			AdID:      order.AdID().String(),
 			CreatedAt: order.CreatedAt(),
 		})

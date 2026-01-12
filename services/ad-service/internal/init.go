@@ -10,8 +10,11 @@ import (
 	"ad-service/internal/application/service"
 	"ad-service/internal/infrastructure/gateway"
 	"ad-service/internal/infrastructure/storage"
+	"ad-service/internal/pkg/circuit"
 	"ad-service/internal/pkg/closer"
 	"ad-service/internal/pkg/connector/postgres"
+	"ad-service/internal/pkg/grpc/intercept"
+	"ad-service/internal/pkg/hedge"
 	adV1 "ad-service/internal/pkg/pb/ad-service/ad/v1"
 
 	"github.com/not-for-prod/clay/transport"
@@ -75,6 +78,7 @@ func (a *App) initMainServer(ctx context.Context) error {
 				Time:              config.Instance().GrpcServer.Time,
 				Timeout:           config.Instance().GrpcServer.Timeout,
 			}),
+			grpc.ChainUnaryInterceptor(intercept.ErrorInterceptor()),
 		),
 	)
 
@@ -110,7 +114,12 @@ func (a *App) initGrpcConn(_ context.Context) error {
 		var err error
 
 		conn, err := grpc.NewClient(config.Instance().Targets[srv],
-			grpc.WithTransportCredentials(insecure.NewCredentials()))
+			grpc.WithTransportCredentials(insecure.NewCredentials()),
+			grpc.WithChainUnaryInterceptor(
+				circuit.NewCircuitBreaker(config.Instance().Circuit).UnaryClientInterceptor(),
+				hedge.NewHedger(config.Instance().Hedge).UnaryClientInterceptor(),
+			),
+		)
 
 		if err != nil {
 			return fmt.Errorf("не удалось инициализировать grpc соединение к %s : %s", srv, err.Error())

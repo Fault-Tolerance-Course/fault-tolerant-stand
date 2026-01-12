@@ -7,7 +7,7 @@ import (
 )
 
 func Exec(ctx context.Context, callback func(ctx context.Context) error) (err error) {
-	if tx := abstract.TxFromContext(ctx); tx != nil {
+	if tx := abstract.TxFromContext(ctx); tx == nil {
 		var commit abstract.CommitFunc
 		ctx, commit = abstract.ContextWithTx(ctx, nil)
 		defer func() {

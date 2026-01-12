@@ -47,6 +47,38 @@
           "OrderService"
         ]
       }
+    },
+    "/order_service.order.v1.OrderService/GetActiveOrders": {
+      "post": {
+        "operationId": "OrderService_GetActiveOrders",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/order_service.order.v1.GetActiveOrdersResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/google.rpc.Status"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/order_service.order.v1.GetActiveOrdersRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OrderService"
+        ]
+      }
     }
   },
   "definitions": {
@@ -103,6 +135,15 @@
       "properties": {
         "order": {
           "$ref": "#/definitions/order_service.order.v1.CreateOrderRequest.Order"
+        },
+        "idempotencyKey": {
+          "type": "string",
+          "title": "ключ идемпотентности"
+        },
+        "ordersVersion": {
+          "type": "string",
+          "format": "int64",
+          "title": "условие для if-match"
         }
       }
     },
@@ -132,6 +173,11 @@
       "properties": {
         "details": {
           "$ref": "#/definitions/order_service.order.v1.CreateOrderResponse.Details"
+        },
+        "ordersVersion": {
+          "type": "string",
+          "format": "int64",
+          "title": "текущая версия списка заказов"
         }
       }
     },
@@ -145,6 +191,58 @@
         "orderStatus": {
           "type": "string",
           "title": "статус заказа"
+        }
+      }
+    },
+    "order_service.order.v1.GetActiveOrdersRequest": {
+      "type": "object",
+      "properties": {
+        "clientId": {
+          "type": "string",
+          "title": "Идентификатор клиента"
+        }
+      }
+    },
+    "order_service.order.v1.GetActiveOrdersResponse": {
+      "type": "object",
+      "properties": {
+        "orders": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/order_service.order.v1.GetActiveOrdersResponse.Order"
+          },
+          "title": "список заказов"
+        },
+        "ordersVersion": {
+          "type": "string",
+          "format": "int64",
+          "title": "слепок состояния (версия)"
+        }
+      }
+    },
+    "order_service.order.v1.GetActiveOrdersResponse.Order": {
+      "type": "object",
+      "properties": {
+        "orderId": {
+          "type": "string",
+          "title": "идентификатор заказа"
+        },
+        "orderStatus": {
+          "type": "string",
+          "title": "статус заказа"
+        },
+        "adId": {
+          "type": "string",
+          "title": "Уникальный идентификатор"
+        },
+        "category": {
+          "type": "string",
+          "title": "Категория"
+        },
+        "price": {
+          "$ref": "#/definitions/google.type.Money",
+          "title": "Стоимость"
         }
       }
     }

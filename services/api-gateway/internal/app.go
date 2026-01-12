@@ -25,6 +25,7 @@ import (
 // App application
 type App struct {
 	mainServer *server.Server
+	mainMux    *chi.Mux
 
 	adminListener net.Listener
 	adminMux      *chi.Mux

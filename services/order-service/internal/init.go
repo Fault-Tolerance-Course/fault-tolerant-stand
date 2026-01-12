@@ -11,6 +11,7 @@ import (
 	"order-service/internal/infrastructure/dal"
 	"order-service/internal/infrastructure/messagebus"
 	"order-service/internal/pkg/connector/postgres"
+	"order-service/internal/pkg/grpc/intercept"
 	orderV1 "order-service/internal/pkg/pb/order-service/order/v1"
 
 	"github.com/go-chi/chi/v5"
@@ -73,7 +74,8 @@ func (a *App) initMainServer(ctx context.Context) error {
 				MaxConnectionAge:  config.Instance().GrpcServer.MaxConnectionAge,
 				Time:              config.Instance().GrpcServer.Time,
 				Timeout:           config.Instance().GrpcServer.Timeout,
-			})),
+			}),
+			grpc.ChainUnaryInterceptor(intercept.ErrorInterceptor())),
 	)
 
 	a.publicCloser.Add(func() error {

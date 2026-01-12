@@ -10,10 +10,16 @@ import "google/protobuf/timestamp.proto";
 
 service OrderService {
   rpc CreateOrder(CreateOrderRequest) returns (CreateOrderResponse);
+
+  rpc GetActiveOrders(GetActiveOrdersRequest) returns (GetActiveOrdersResponse);
 }
 
 message CreateOrderRequest {
   Order order = 1;
+  // ключ идемпотентности
+  string idempotency_key = 2;
+  // условие для if-match
+  int64 orders_version = 3;
 
   message Order {
     // Уникальный идентификатор
@@ -29,11 +35,38 @@ message CreateOrderRequest {
 
 message CreateOrderResponse {
   Details details = 1;
+  // текущая версия списка заказов
+  int64 orders_version = 2;
 
   message Details {
     // идентификатор заказа
     string order_id = 1;
     // статус заказа
     string order_status = 2;
+  }
+}
+
+message GetActiveOrdersRequest{
+  // Идентификатор клиента
+  string client_id = 1;
+}
+
+message GetActiveOrdersResponse{
+  // список заказов
+  repeated Order orders = 1;
+  // слепок состояния (версия)
+  int64 orders_version = 2;
+
+  message Order {
+    // идентификатор заказа
+    string order_id = 1;
+    // статус заказа
+    string order_status = 2;
+    // Уникальный идентификатор
+    string ad_id = 3;
+    // Категория
+    string category = 4;
+    // Стоимость
+    google.type.Money price = 5;
   }
 }

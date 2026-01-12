@@ -16,6 +16,8 @@ bin-deps:
 dependency:
 	GOBIN=$(LOCAL_BIN) go install github.com/golang/mock/mockgen@v1.6.0
 	GOBIN=$(LOCAL_BIN) go install gotest.tools/gotestsum@v1.7.0
+	GOBIN=$(LOCAL_BIN) go install github.com/not-for-prod/xo@latest
+	GOBIN=$(LOCAL_BIN) go install github.com/pressly/goose/v3/cmd/goose@v3.22.1
 
 .PHONY: run
 run:
@@ -61,13 +63,12 @@ generate:
 fast-generate:
 	@$(MAKE) .copy_validate_proto
 
-
 XO_OUTPUT_PATH=./internal/pkg/xo
 XO_TEMPLATE_PATH=./tools/xo_templates
 .PHONY: xo ## генерация dto базы данных
 xo: migrations-up
 	mkdir -p $(XO_OUTPUT_PATH)
-	xo "pgsql://$(DB_USER):$(DB_PASS)@localhost:$(DB_PORT)/$(DB_NAME)?sslmode=disable" \
+	$(LOCAL_BIN)/xo "pgsql://$(DB_USER):$(DB_PASS)@localhost:$(DB_PORT)/$(DB_NAME)?sslmode=disable" \
 	-o $(XO_OUTPUT_PATH) --template-path $(XO_TEMPLATE_PATH) --schema public --suffix ".xo.go" --custom-type-package custom
 	rm $(XO_OUTPUT_PATH)/goosedbversion.xo.go
 	rm $(XO_OUTPUT_PATH)/xo_db.xo.go

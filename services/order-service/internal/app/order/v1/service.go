@@ -9,6 +9,8 @@ import (
 type Implementation struct {
 	orderV1.UnimplementedOrderServiceServer
 	services *service.Registry
+
+	requestCounter uint64 // atomic counter
 }
 
 func NewOrderService(services *service.Registry) *Implementation {

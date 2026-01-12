@@ -72,3 +72,21 @@ func (w *OrderServiceServiceDesc) CreateOrder(ctx context.Context, in *CreateOrd
 	}
 	return resp.(*CreateOrderResponse), err
 }
+
+func (w *OrderServiceServiceDesc) GetActiveOrders(ctx context.Context, in *GetActiveOrdersRequest) (*GetActiveOrdersResponse, error) {
+	if w.opts.UnaryInterceptor == nil {
+		return w.svc.GetActiveOrders(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     w,
+		FullMethod: "/order_service.order.v1.OrderService/GetActiveOrders",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return w.svc.GetActiveOrders(ctx, req.(*GetActiveOrdersRequest))
+	}
+	resp, err := w.opts.UnaryInterceptor(ctx, in, info, handler)
+	if err != nil || resp == nil {
+		return nil, err
+	}
+	return resp.(*GetActiveOrdersResponse), err
+}

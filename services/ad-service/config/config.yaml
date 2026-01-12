@@ -25,3 +25,24 @@ postgres:
 
 services:
   blob: blob
+
+circuit:
+  handlers:
+    - method: "/review_service.review.v1.ReviewService/GetAdReview"
+      enabled: true
+      max_requests: 10,
+      open_interval: 3s,
+      interval: 10s,
+      bucket_period: 1s
+      threshold_consecutive: 5
+      threshold_percentage: 30
+
+hedge:
+  handlers:
+    - method: "/review_service.review.v1.ReviewService/GetAdReview"
+      enabled: true
+      window_size: 5  # Размер (100) кольцевого буфера последних 100 ответов. НО ДЛЯ ДЕМО СТАВЛЮ 5
+      percentile: 0.95  # Целевой процентиль латентности, который оптимизируем (95-й)
+      percentile_offset: 0.05 # Смещение вниз для запуска hedged-запроса чуть раньше
+      budget: 1 # допускаю только 20% от всех запросов в качестве hedged. НО ДЛЯ ДЕМО СТАВЛЮ 100%
+      reset_period: 1s # Сброс счётчиков раз в 1 секунду

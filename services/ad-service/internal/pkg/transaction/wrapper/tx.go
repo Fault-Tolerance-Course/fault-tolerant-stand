@@ -44,7 +44,6 @@ func (t *Tx) Commit() error {
 	}
 
 	t.err = nil
-	t.tx = nil
 	return t.tx.Commit(t.ctx)
 }
 
@@ -54,7 +53,6 @@ func (t *Tx) Rollback() error {
 	}
 
 	t.err = nil
-	t.tx = nil
 	return t.tx.Rollback(t.ctx)
 }
 

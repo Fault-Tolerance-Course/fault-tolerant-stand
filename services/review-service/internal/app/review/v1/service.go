@@ -10,6 +10,8 @@ type Implementation struct {
 	services *service.Registry
 
 	requestCounter uint64 // atomic counter
+
+	unstableReqCounter uint64 // Счетчик запросов для UnstableMethod
 }
 
 func NewReviewService(services *service.Registry) *Implementation {

@@ -72,3 +72,21 @@ func (w *ReviewServiceServiceDesc) GetAdReview(ctx context.Context, in *GetAdRev
 	}
 	return resp.(*GetAdReviewResponse), err
 }
+
+func (w *ReviewServiceServiceDesc) UnstableMethod(ctx context.Context, in *UnstableMethodRequest) (*UnstableMethodResponse, error) {
+	if w.opts.UnaryInterceptor == nil {
+		return w.svc.UnstableMethod(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     w,
+		FullMethod: "/review_service.review.v1.ReviewService/UnstableMethod",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return w.svc.UnstableMethod(ctx, req.(*UnstableMethodRequest))
+	}
+	resp, err := w.opts.UnaryInterceptor(ctx, in, info, handler)
+	if err != nil || resp == nil {
+		return nil, err
+	}
+	return resp.(*UnstableMethodResponse), err
+}

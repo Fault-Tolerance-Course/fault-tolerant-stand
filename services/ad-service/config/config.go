@@ -9,6 +9,7 @@ import (
 
 	"ad-service/internal/pkg/circuit"
 	"ad-service/internal/pkg/hedge"
+	"ad-service/internal/pkg/ratelimit"
 
 	"github.com/ilyakaznacheev/cleanenv"
 )
@@ -19,6 +20,8 @@ var (
 )
 
 const (
+	AppName = "ad-service"
+
 	ReviewService = "review-service"
 )
 
@@ -27,8 +30,9 @@ type Config struct {
 	HttpServer HttpServer `yaml:"http_server"`
 	Postgres   Postgres   `yaml:"postgres"`
 
-	Hedge   hedge.Config   `yaml:"hedge"`
-	Circuit circuit.Config `json:"circuit"`
+	Hedge     hedge.Config     `yaml:"hedge"`
+	Circuit   circuit.Config   `yaml:"circuit"`
+	RateLimit ratelimit.Config `yaml:"rate_limit"`
 
 	Graceful Graceful          `yaml:"graceful"`
 	Targets  map[string]string `yaml:"service"`

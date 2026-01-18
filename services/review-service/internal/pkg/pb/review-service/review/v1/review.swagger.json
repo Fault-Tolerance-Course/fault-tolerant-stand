@@ -48,6 +48,39 @@
           "ReviewService"
         ]
       }
+    },
+    "/review_service.review.v1.ReviewService/UnstableMethod": {
+      "post": {
+        "summary": "Метод с ростом задержки",
+        "operationId": "ReviewService_UnstableMethod",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/review_service.review.v1.UnstableMethodResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/google.rpc.Status"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/review_service.review.v1.UnstableMethodRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ReviewService"
+        ]
+      }
     }
   },
   "definitions": {
@@ -113,6 +146,17 @@
           "$ref": "#/definitions/google.type.Decimal"
         }
       }
+    },
+    "review_service.review.v1.UnstableMethodRequest": {
+      "type": "object",
+      "properties": {
+        "slowdown": {
+          "type": "boolean"
+        }
+      }
+    },
+    "review_service.review.v1.UnstableMethodResponse": {
+      "type": "object"
     }
   }
 }

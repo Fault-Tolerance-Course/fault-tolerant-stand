@@ -75,7 +75,10 @@ func (a *App) initMainServer(ctx context.Context) error {
 				Time:              config.Instance().GrpcServer.Time,
 				Timeout:           config.Instance().GrpcServer.Timeout,
 			}),
-			grpc.ChainUnaryInterceptor(intercept.ErrorInterceptor())),
+			grpc.ChainUnaryInterceptor(
+				intercept.ExtractClientNameInterceptor(),
+				intercept.ErrorInterceptor()),
+		),
 	)
 
 	a.publicCloser.Add(func() error {

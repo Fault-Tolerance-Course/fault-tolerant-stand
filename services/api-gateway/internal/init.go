@@ -9,6 +9,7 @@ import (
 	"sync/atomic"
 
 	"api-gateway/config"
+	"api-gateway/internal/pkg/grpc/intercept"
 	"api-gateway/internal/pkg/healthcheck"
 
 	"api-gateway/internal/pkg/http/middleware/timeout"
@@ -129,7 +130,10 @@ func (a *App) initGrpcConn(_ context.Context) error {
 
 		conn, err := grpc.NewClient(config.Instance().Targets[srv],
 			grpc.WithTransportCredentials(insecure.NewCredentials()),
-			grpc.WithUnaryInterceptor(retry.NewRetry(config.Instance().Retry).UnaryClientInterceptor()))
+			grpc.WithChainUnaryInterceptor(
+				intercept.SetClientNameInterceptor(config.AppName),
+				retry.NewRetry(config.Instance().Retry).UnaryClientInterceptor()),
+		)
 
 		if err != nil {
 			return fmt.Errorf("не удалось инициализировать grpc соединение к %s : %s", srv, err.Error())

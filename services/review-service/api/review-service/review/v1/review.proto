@@ -9,6 +9,8 @@ import "google/type/decimal.proto";
 service ReviewService {
   // Получить отзыв по одному объявлению
   rpc GetAdReview(GetAdReviewRequest) returns (GetAdReviewResponse);
+  // Метод с ростом задержки
+  rpc UnstableMethod(UnstableMethodRequest) returns (UnstableMethodResponse);
 }
 
 message GetAdReviewRequest {
@@ -22,4 +24,11 @@ message GetAdReviewResponse {
   message Review{
     google.type.Decimal avg_review = 1;
   }
+}
+
+message UnstableMethodRequest {
+  bool slowdown = 1;
+}
+
+message UnstableMethodResponse{
 }

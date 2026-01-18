@@ -16,6 +16,7 @@ import (
 	"ad-service/internal/pkg/grpc/intercept"
 	"ad-service/internal/pkg/hedge"
 	adV1 "ad-service/internal/pkg/pb/ad-service/ad/v1"
+	"ad-service/internal/pkg/ratelimit"
 
 	"github.com/not-for-prod/clay/transport"
 	"google.golang.org/grpc"
@@ -78,7 +79,11 @@ func (a *App) initMainServer(ctx context.Context) error {
 				Time:              config.Instance().GrpcServer.Time,
 				Timeout:           config.Instance().GrpcServer.Timeout,
 			}),
-			grpc.ChainUnaryInterceptor(intercept.ErrorInterceptor()),
+			grpc.ChainUnaryInterceptor(
+				intercept.ExtractClientNameInterceptor(),
+				intercept.ErrorInterceptor(),
+				ratelimit.NewLimiter(config.Instance().RateLimit).UnaryServerInterceptor(),
+			),
 		),
 	)
 
@@ -116,6 +121,7 @@ func (a *App) initGrpcConn(_ context.Context) error {
 		conn, err := grpc.NewClient(config.Instance().Targets[srv],
 			grpc.WithTransportCredentials(insecure.NewCredentials()),
 			grpc.WithChainUnaryInterceptor(
+				intercept.SetClientNameInterceptor(config.AppName),
 				circuit.NewCircuitBreaker(config.Instance().Circuit).UnaryClientInterceptor(),
 				hedge.NewHedger(config.Instance().Hedge).UnaryClientInterceptor(),
 			),

@@ -17,6 +17,8 @@ var (
 )
 
 const (
+	AppName = "api-gateway"
+
 	AdService    = "ad-service"
 	OrderService = "order-service"
 )

@@ -6,6 +6,8 @@ import (
 	"strings"
 	"sync"
 
+	"review/internal/pkg/loadshedding"
+
 	"github.com/ilyakaznacheev/cleanenv"
 )
 
@@ -15,10 +17,13 @@ var (
 )
 
 type Config struct {
-	GrpcServer GrpcServer        `yaml:"grpc_server"`
-	HttpServer HttpServer        `yaml:"http_server"`
-	Graceful   Graceful          `yaml:"graceful"`
-	Targets    map[string]string `yaml:"service"`
+	GrpcServer GrpcServer `yaml:"grpc_server"`
+	HttpServer HttpServer `yaml:"http_server"`
+
+	LoadShedding loadshedding.Config `yaml:"load_shedding"`
+
+	Graceful Graceful          `yaml:"graceful"`
+	Targets  map[string]string `yaml:"service"`
 }
 
 func Instance() *Config {

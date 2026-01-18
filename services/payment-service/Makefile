@@ -16,6 +16,9 @@ bin-deps:
 dependency:
 	GOBIN=$(LOCAL_BIN) go install github.com/golang/mock/mockgen@v1.6.0
 	GOBIN=$(LOCAL_BIN) go install gotest.tools/gotestsum@v1.7.0
+	GOBIN=$(LOCAL_BIN) go install github.com/not-for-prod/xo@latest
+	GOBIN=$(LOCAL_BIN) go install github.com/pressly/goose/v3/cmd/goose@v3.22.1
+
 
 .PHONY: run
 run:

@@ -66,7 +66,7 @@ func (a *App) Run(_ context.Context) {
 		}()
 	}
 
-	slog.Info(fmt.Sprintf("APP STARTED ON PORTS => HTTP: %d, GRPC: %d",
+	slog.Info(fmt.Sprintf("APP STARTED ON PORTS => GRPC: %d, HTTP: %d",
 		config.Instance().GrpcServer.Port,
 		config.Instance().HttpServer.Port,
 	))

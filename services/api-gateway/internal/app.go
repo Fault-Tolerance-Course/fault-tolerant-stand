@@ -104,7 +104,7 @@ func (a *App) Run(_ context.Context) {
 	// start signal
 	atomic.StoreInt32(&a.started, 1)
 
-	slog.Info(fmt.Sprintf("APP STARTED ON PORTS => HTTP: %d, GRPC: %d",
+	slog.Info(fmt.Sprintf("APP STARTED ON PORTS => GRPC: %d, HTTP: %d",
 		config.Instance().GrpcServer.Port,
 		config.Instance().HttpServer.Port,
 	))

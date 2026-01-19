@@ -39,7 +39,7 @@ func New(order *entity.Order) pipe.Func[event.Events] {
 
 		// загорловки в сообщении любые
 		headers := map[string]string{
-			"x-app-name":   "payment-service",
+			"x-app-name":   "order-service",
 			"x-event-type": "order-created",
 		}
 

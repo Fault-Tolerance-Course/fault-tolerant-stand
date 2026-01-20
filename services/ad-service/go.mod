@@ -6,6 +6,7 @@ require (
 	github.com/georgysavva/scany/v2 v2.1.4
 	github.com/go-chi/chi/v5 v5.2.3
 	github.com/gofrs/uuid v4.4.0+incompatible
+	github.com/google/uuid v1.6.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.2
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	github.com/jackc/pgx/v5 v5.7.6
@@ -15,6 +16,7 @@ require (
 	github.com/samber/lo v1.52.0
 	github.com/shopspring/decimal v1.4.0
 	github.com/sony/gobreaker/v2 v2.4.0
+	github.com/stretchr/testify v1.11.1
 	gitlab.com/NebulousLabs/fastrand v0.0.0-20181126182046-603482d69e40
 	golang.org/x/time v0.14.0
 	google.golang.org/genproto v0.0.0-20251111163417-95abcf5c77ba
@@ -25,6 +27,7 @@ require (
 require (
 	github.com/BurntSushi/toml v1.2.1 // indirect
 	github.com/KyleBanks/depth v1.2.1 // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-openapi/jsonpointer v0.22.0 // indirect
 	github.com/go-openapi/jsonreference v0.21.1 // indirect
 	github.com/go-openapi/spec v0.21.0 // indirect
@@ -48,6 +51,7 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/mailru/easyjson v0.9.0 // indirect
 	github.com/peterbourgon/mergemap v0.0.1 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/soheilhy/cmux v0.1.5 // indirect
 	github.com/swaggo/files v1.0.1 // indirect
 	github.com/swaggo/http-swagger v1.3.4 // indirect

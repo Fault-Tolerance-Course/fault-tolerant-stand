@@ -4,16 +4,12 @@ import "golang.org/x/time/rate"
 
 const (
 	defaultBurstRatio = 1.0
-
-	defaultClientName = "unknown"
 )
 
 type state struct {
 	cfg Config
 
 	rules []*internalState
-
-	defaultState *internalState
 }
 
 type internalState struct {
@@ -31,7 +27,7 @@ func newInternalState(config MainConfig) *internalState {
 	}
 
 	// создаем ограничитель
-	limiter := rate.NewLimiter(rate.Limit(burst), burst)
+	limiter := rate.NewLimiter(rate.Limit(config.Limit), burst)
 
 	return &internalState{
 		cfg:     config,

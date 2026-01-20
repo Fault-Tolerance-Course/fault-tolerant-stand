@@ -7,10 +7,19 @@ import (
 	"sync/atomic"
 	"time"
 
+	"ad-service/internal/pkg/grpc/clientname"
+
 	"github.com/samber/lo"
 	"golang.org/x/time/rate"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+)
+
+type Mode uint8
+
+const (
+	ModeClient = iota
+	ModeServer
 )
 
 type Limiter struct {
@@ -21,15 +30,12 @@ type Limiter struct {
 func NewLimiter(config Config) *Limiter {
 	stateAtomic := &atomic.Pointer[state]{}
 
-	enriched := withDefaults(config)
-
 	st := state{
-		cfg:          enriched,
-		rules:        make([]*internalState, 0, len(enriched.Rules)),
-		defaultState: newInternalState(enriched.Default.MainConfig),
+		cfg:   config,
+		rules: make([]*internalState, 0, len(config.Rules)),
 	}
 
-	for _, rule := range enriched.Rules {
+	for _, rule := range config.Rules {
 		st.rules = append(st.rules, newInternalState(rule))
 	}
 
@@ -40,14 +46,13 @@ func NewLimiter(config Config) *Limiter {
 }
 
 func (l *Limiter) doIfAllowed(ctx context.Context, method string, fn func() error) error {
-	clientName := defaultClientName
-
 	// fast path
 	st := l.state.Load()
-
 	if st == nil {
 		return fn()
 	}
+
+	clientName := clientname.FromContext(ctx)
 
 	limiter, timeout := l.match(st, clientName, method)
 	if limiter == nil || timeout <= 0 && limiter.Allow() {
@@ -85,20 +90,10 @@ func (l *Limiter) match(state *state, client, handler string) (*rate.Limiter, ti
 		return clientMatch && handlerMatch
 	}
 
-	// 1. Ищем в конкретных правилах (ruleLimiters)
 	for _, rule := range state.rules {
 		if matcher(rule) {
 			return rule.limiter, rule.cfg.Timeout
 		}
 	}
-
-	// 2. Не нашли в конкретных правилах - пробуем defaultState
-	defState := state.defaultState
-	if defState != nil {
-		if matcher(defState) {
-			return defState.limiter, defState.cfg.Timeout
-		}
-	}
-
 	return nil, 0
 }

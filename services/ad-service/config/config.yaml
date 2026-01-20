@@ -29,7 +29,7 @@ services:
 circuit:
   handlers:
     - method: "/review_service.review.v1.ReviewService/GetAdReview"
-      enabled: true
+      enabled: false
       max_requests: 10
       open_interval: 3s
       interval: 10s
@@ -40,7 +40,7 @@ circuit:
 hedge:
   handlers:
     - method: "/review_service.review.v1.ReviewService/GetAdReview"
-      enabled: true
+      enabled: false
       window_size: 5  # Размер (100) кольцевого буфера последних 100 ответов. НО ДЛЯ ДЕМО СТАВЛЮ 5
       percentile: 0.95  # Целевой процентиль латентности, который оптимизируем (95-й)
       percentile_offset: 0.05 # Смещение вниз для запуска hedged-запроса чуть раньше
@@ -51,6 +51,6 @@ rate_limit:
   rules:
     - clients: ["api-gateway"]
       handlers: ["/ad_service.ad.v1.AdService/GetAd"]
-      limit: 5
-      burst: 10
-      timeout: 200ms
+      limit: 20
+      burst: 5
+      timeout: 700ms # timeout=(requests−burst)*(1/limit) + %

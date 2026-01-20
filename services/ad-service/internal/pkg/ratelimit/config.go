@@ -3,8 +3,7 @@ package ratelimit
 import "time"
 
 type Config struct {
-	Default DefaultConfig `yaml:"__default__"`
-	Rules   []MainConfig  `yaml:"rules"`
+	Rules []MainConfig `yaml:"rules"`
 }
 
 type DefaultConfig struct {
@@ -14,7 +13,8 @@ type DefaultConfig struct {
 type MainConfig struct {
 	// Clients клиенты, к которым относится данное правило
 	//  если список пуст - применяется для любых запросов
-	//  если имя клиента не попадает в список - имя клиента трактуется как unknown
+	//  если имя клиента не попадает в список - имя клиента трактуется как unknown.
+	//  Применимо только для серверного rate limiter'а
 	Clients []string `yaml:"clients"`
 	// Handlers Ручки, к которым относится правило
 	//  если пустой список - применяется для любых запросов
@@ -27,24 +27,4 @@ type MainConfig struct {
 	Burst int `yaml:"burst"`
 	//Timeout время, которое будет ожидать запрос при получении токена
 	Timeout time.Duration `yaml:"timeout"`
-}
-
-func withDefaults(cfg Config) Config {
-	cfg.Default.MainConfig = defaultConfig(cfg.Default.MainConfig)
-
-	return cfg
-}
-
-func enrich(cfg, enrichment MainConfig) MainConfig {
-	cfg.Handlers = overrideIfNilSlice(cfg.Handlers, enrichment.Handlers)
-	cfg.Clients = overrideIfNilSlice(cfg.Clients, enrichment.Clients)
-	cfg.Limit = overrideIfZero(cfg.Limit, enrichment.Limit)
-	cfg.Timeout = overrideIfZero(cfg.Timeout, enrichment.Timeout)
-	cfg.Burst = overrideIfZero(cfg.Burst, enrichment.Burst)
-	return cfg
-}
-
-func defaultConfig(cfg MainConfig) MainConfig {
-	defaultCfg := MainConfig{}
-	return enrich(cfg, defaultCfg)
 }

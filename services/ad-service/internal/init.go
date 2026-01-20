@@ -8,6 +8,7 @@ import (
 	"ad-service/config"
 	"ad-service/internal/app/ad/v1"
 	"ad-service/internal/application/service"
+	"ad-service/internal/infrastructure/adapter"
 	"ad-service/internal/infrastructure/gateway"
 	"ad-service/internal/infrastructure/storage"
 	"ad-service/internal/pkg/circuit"
@@ -23,6 +24,8 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/keepalive"
 
+	pkgredis "ad-service/internal/pkg/connector/redis"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/not-for-prod/clay/server"
 )
@@ -37,6 +40,16 @@ func (a *App) initPostgres(ctx context.Context) error {
 	return nil
 }
 
+func (a *App) initRedis(ctx context.Context) error {
+	client, err := pkgredis.Client(ctx)
+	if err != nil {
+		return fmt.Errorf("[REDIS] Не удалось инициализировать клиента: %s", err.Error())
+	}
+
+	a.redis = client
+	return nil
+}
+
 func (a *App) initStorages(_ context.Context) error {
 	if a.storages == nil {
 		a.storages = storage.NewRegistry(a.pool)
@@ -46,7 +59,14 @@ func (a *App) initStorages(_ context.Context) error {
 
 func (a *App) initServices(_ context.Context) error {
 	if a.services == nil {
-		a.services = service.NewRegistry(a.storages, a.gateways)
+		a.services = service.NewRegistry(a.storages, a.gateways, a.adapters)
+	}
+	return nil
+}
+
+func (a *App) initAdapter(_ context.Context) error {
+	if a.adapters == nil {
+		a.adapters = adapter.NewRegistry(a.redis, a.storages)
 	}
 	return nil
 }

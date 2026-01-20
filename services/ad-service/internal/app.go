@@ -9,6 +9,7 @@ import (
 
 	"ad-service/config"
 	"ad-service/internal/application/service"
+	"ad-service/internal/infrastructure/adapter"
 	"ad-service/internal/infrastructure/gateway"
 	"ad-service/internal/infrastructure/storage"
 	"ad-service/internal/pkg/closer"
@@ -17,6 +18,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/not-for-prod/clay/server"
 	"github.com/not-for-prod/clay/transport"
+	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
 )
 
@@ -28,11 +30,15 @@ type App struct {
 
 	pool *pgxpool.Pool
 
+	redis redis.UniversalClient
+
 	storages *storage.Registry
 
 	gateways *gateway.Registry
 
 	services *service.Registry
+
+	adapters *adapter.Registry
 
 	publicCloser *closer.Closer
 
@@ -79,10 +85,12 @@ func (a *App) Run(_ context.Context) {
 func (a *App) init(ctx context.Context) error {
 	initFuncs := []func(context.Context) error{
 		a.initMainServer,
-		a.initGrpcConn,
 		a.initPostgres,
+		a.initRedis,
+		a.initGrpcConn,
 		a.initGateways,
 		a.initStorages,
+		a.initAdapter,
 		a.initServices,
 		a.initControllers,
 	}

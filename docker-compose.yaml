@@ -76,6 +76,9 @@ services:
       review-service:
         condition: service_started
         restart: true
+      ad-redis:
+        condition: service_healthy
+        restart: true
       ad-service-migrations:
         condition: service_completed_successfully
         restart: true
@@ -207,6 +210,23 @@ services:
       interval: 1s
       timeout: 2s
       retries: 5
+    networks:
+      - app-network
+
+  ad-redis:
+    image: redis:7.4.2-alpine
+    hostname: ad-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 1s
+      timeout: 2s
+      retries: 5
+    volumes:
+      - ./deploy/redis/redis.conf:/etc/redis/redis.conf
+    command: redis-server /etc/redis/redis.conf
     networks:
       - app-network
 

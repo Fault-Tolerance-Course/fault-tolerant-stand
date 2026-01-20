@@ -23,6 +23,21 @@ postgres:
   min_idle_connections: 3
   max_con_lifetime: 5s
 
+redis:
+  addr: ad-redis:6379
+  db: 0
+  max_retries: 4
+  dial_timeout: 10s
+  timeout: 3s
+
+cache:
+  key_version: v1
+  soft_ttl: 45s
+  hard_ttl: 10m
+  jitter_percentage: 0.3
+  negative:
+    not_found_ttl: 30s
+
 services:
   blob: blob
 

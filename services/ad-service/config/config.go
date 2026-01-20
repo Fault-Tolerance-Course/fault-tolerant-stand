@@ -28,7 +28,11 @@ const (
 type Config struct {
 	GrpcServer GrpcServer `yaml:"grpc_server"`
 	HttpServer HttpServer `yaml:"http_server"`
-	Postgres   Postgres   `yaml:"postgres"`
+
+	Postgres Postgres `yaml:"postgres"`
+	Redis    Redis    `yaml:"redis"`
+
+	Cache Cache `yaml:"cache"`
 
 	Hedge     hedge.Config     `yaml:"hedge"`
 	Circuit   circuit.Config   `yaml:"circuit"`

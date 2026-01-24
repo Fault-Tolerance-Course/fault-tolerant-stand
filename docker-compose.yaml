@@ -19,6 +19,7 @@ services:
       - ad-service
     deploy:
       replicas: 3
+    stop_grace_period: 40s
     healthcheck:
       test: ["CMD-SHELL", "/etc/healthcheck.sh"]
       interval: 30s

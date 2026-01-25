@@ -76,7 +76,7 @@ func (a *App) initMainServer(ctx context.Context) error {
 		case <-gracefulCtx.Done():
 			err := fmt.Errorf("review-service: error while graceful shutdown server: %w", gracefulCtx.Err())
 			_ = a.mainServer.Stop(ctx) // TODO: поправить в либе на hard shutdown (да, заметил поздно :) )
-			return fmt.Errorf("review-gateway: stopped: %w", err)
+			return fmt.Errorf("review-service: stopped: %w", err)
 		}
 		return nil
 	})

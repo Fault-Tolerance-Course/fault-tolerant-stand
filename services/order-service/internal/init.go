@@ -95,7 +95,7 @@ func (a *App) initMainServer(ctx context.Context) error {
 		case <-gracefulCtx.Done():
 			err := fmt.Errorf("order-service: error while graceful shutdown server: %w", gracefulCtx.Err())
 			_ = a.mainServer.Stop(ctx) // TODO: поправить в либе на hard shutdown (да, заметил поздно :) )
-			return fmt.Errorf("order-gateway: stopped: %w", err)
+			return fmt.Errorf("order-service: stopped: %w", err)
 		}
 		return nil
 	})

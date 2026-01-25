@@ -29,14 +29,24 @@ func newInternalState(config MainConfig, name string) *internalState {
 		ReadyToTrip: func(counts gobreaker.Counts) bool {
 			// Срабатываем, если количество ошибок превышает порог
 			// Тут смотрим как на последовательные ошибки, так и на общий процент в окне
-			return counts.ConsecutiveFailures >= config.ThresholdConsecutive ||
-				(counts.Requests > 0 && (counts.TotalFailures*100/counts.Requests) > config.ThresholdPercentage)
+			shouldOpen := counts.ConsecutiveFailures >= config.ThresholdConsecutive ||
+				(counts.Requests > 10 && (counts.TotalFailures*100/counts.Requests) > config.ThresholdPercentage)
+
+			slog.Info(fmt.Sprintf("circuit should open: %v", shouldOpen),
+				"total", counts.Requests,
+				"total_successes", counts.TotalSuccesses,
+				"total_failures", counts.TotalFailures,
+				"consecutive_successes", counts.ConsecutiveSuccesses,
+				"consecutive_failures", counts.ConsecutiveFailures,
+			)
+
+			return shouldOpen
 		},
 		OnStateChange: func(name string, from, to gobreaker.State) {
-			slog.Info(fmt.Sprintf("Circuit breaker '%s' changed state: %s → %s", name, from, to))
+			slog.Info(fmt.Sprintf("circuit breaker '%s' changed state: %s → %s", name, from, to))
 		},
 		IsSuccessful: func(err error) bool {
-			return triggerOnError(err, config.FailureCodes, config.failureCodeSet())
+			return !triggerOnError(err, config.FailureCodes, config.failureCodeSet())
 		},
 	}
 

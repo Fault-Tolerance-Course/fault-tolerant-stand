@@ -28,7 +28,7 @@ type Config struct {
 	Postgres   Postgres   `yaml:"postgres"`
 
 	Hedge   hedge.Config   `yaml:"hedge"`
-	Circuit circuit.Config `json:"circuit"`
+	Circuit circuit.Config `yaml:"circuit"`
 
 	Graceful Graceful          `yaml:"graceful"`
 	Targets  map[string]string `yaml:"service"`

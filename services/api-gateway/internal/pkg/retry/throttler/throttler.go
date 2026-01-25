@@ -1,6 +1,9 @@
 package throttler
 
-import "sync"
+import (
+	"log/slog"
+	"sync"
+)
 
 type Throttler struct {
 	max    float64 // максимальное количество токенов, которое допускаем
@@ -42,6 +45,8 @@ func (rt *Throttler) Throttle() bool {
 		rt.tokens = 0
 	}
 
+	slog.Info("throttler: error rpc", "tokens", rt.tokens)
+
 	return false
 }
 
@@ -61,4 +66,6 @@ func (rt *Throttler) SuccessfulRPC() {
 	if rt.tokens > rt.max {
 		rt.tokens = rt.max
 	}
+
+	slog.Info("throttler: successful rpc", "tokens", rt.tokens)
 }

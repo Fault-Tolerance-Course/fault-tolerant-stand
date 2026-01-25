@@ -92,7 +92,7 @@ func (s *StrategySingleD) Execute(ctx context.Context, fn RPCFunc) (interface{},
 				s.hedgedReqCount++
 				s.muCounters.Unlock()
 
-				slog.Info(fmt.Sprintf("execute hendged at '%s' after %s", time.Now().String(), d.String()))
+				slog.Info(fmt.Sprintf("execute hedged at '%s' after %s", time.Now().String(), d.String()))
 				execute(s.latencyRingBuf.Append, false)
 			}
 		}()
@@ -102,6 +102,8 @@ func (s *StrategySingleD) Execute(ctx context.Context, fn RPCFunc) (interface{},
 	case <-ctx.Done():
 		return nil, status.FromContextError(ctx.Err()).Err()
 	case resp := <-respCh:
+		// если primary слишком быстрый и обгоняет подсчитанный delay для hedged,
+		// то он может успеть отдать ответ и мы вызовем тут defer cancel(), что исключит запуск hedged вовсе
 		return resp.msg, resp.err
 	}
 }

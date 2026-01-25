@@ -15,9 +15,9 @@ http_server:
 retry:
   handlers:
   - method: "/order_service.order.v1.OrderService/CreateOrder"
-    enabled: true
-    max_attempts: 3
-    initial_backoff: 50m # не слишком большой, и не слишком маленький
+    enabled: false
+    max_attempts: 20
+    initial_backoff: 50ms # не слишком большой, и не слишком маленький
     max_backoff: 1s
     backoff_multiplier: 2.0 # классический экспоненциальный
     throttler:

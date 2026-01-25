@@ -2,7 +2,6 @@ package ad
 
 import (
 	"context"
-	"time"
 
 	"ad-service/internal/application/service/ad/create_ad"
 	"ad-service/internal/pkg/convert"
@@ -10,17 +9,9 @@ import (
 	adV1 "ad-service/internal/pkg/pb/ad-service/ad/v1"
 
 	"github.com/gofrs/uuid"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 func (i *Implementation) CreateAd(ctx context.Context, req *adV1.CreateAdRequest) (*adV1.CreateAdResponse, error) {
-	select {
-	case <-ctx.Done():
-		return nil, status.Error(codes.Canceled, "context cancelled")
-	case <-time.After(20 * time.Second):
-	}
-
 	request := create_ad.NewRequest(
 		req.GetTitle(),
 		req.GetCategory(),

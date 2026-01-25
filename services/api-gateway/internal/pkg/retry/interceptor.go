@@ -2,6 +2,7 @@ package retry
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"math"
 	"math/rand/v2"
@@ -31,6 +32,7 @@ func (r *Retry) UnaryClientInterceptor() grpc.UnaryClientInterceptor {
 		)
 
 		for attempt := 0; attempt < state.cfg.MaxAttempts; attempt++ {
+			slog.Info("retry: invoke", "method", method, "attempts", attempt)
 			// Проверяем, отменен ли контекст
 			select {
 			case <-ctx.Done():
@@ -38,11 +40,19 @@ func (r *Retry) UnaryClientInterceptor() grpc.UnaryClientInterceptor {
 			default:
 			}
 
+			// добавляем x-retry-attempt & x-retry-max-attempts для демонстрации
+			// в production такое делать не обязательно :)
+			md := metadata.Pairs(
+				"x-retry-attempt", fmt.Sprintf("%d", attempt),
+				"x-retry-max-attempts", fmt.Sprintf("%d", state.cfg.MaxAttempts),
+			)
+			ctxWithMD := metadata.NewOutgoingContext(ctx, md)
+
 			// готовим трейлеры и заголовки для получения в ответе
 			var trailer metadata.MD
 			callOpts := append(opts, grpc.Trailer(&trailer))
 
-			err := invoker(ctx, method, req, reply, cc, callOpts...)
+			err := invoker(ctxWithMD, method, req, reply, cc, callOpts...)
 
 			// запрос завершился без ошибки
 			if err == nil {
@@ -50,16 +60,24 @@ func (r *Retry) UnaryClientInterceptor() grpc.UnaryClientInterceptor {
 					// засчитываем успех и пополняем токены
 					throttle.SuccessfulRPC()
 				}
+
+				slog.Info("retry: succeeded", "method", method, "attempts", attempt)
 				return nil
 			}
 
 			// является ли код ошибки пригодным для retry?
 			if !isRetryableCode(err, state.cfg.RetryableStatusCodes, state.cfg.retryableCodesSet()) {
+				slog.Warn("retry: non-retryable error", "method", method, "err", err)
 				return err
 			}
 
 			// смотрим, дошли ли мы до последней попытки?
 			if attempt == state.cfg.MaxAttempts-1 {
+				slog.Warn("retry: max attempts reached",
+					"method", method,
+					"attempts", state.cfg.MaxAttempts,
+					"err", err,
+				)
 				return err
 			}
 
@@ -68,6 +86,12 @@ func (r *Retry) UnaryClientInterceptor() grpc.UnaryClientInterceptor {
 
 			// если сервер передал пушбек
 			if pb.Has {
+				slog.Info("retry: server pushback",
+					"method", method,
+					"reject", pb.Reject,
+					"delay", pb.Delay,
+				)
+
 				if pb.Reject {
 					// сервер сказал "не ретраить"
 					return err
@@ -85,12 +109,20 @@ func (r *Retry) UnaryClientInterceptor() grpc.UnaryClientInterceptor {
 
 			// смотрим, не исчерпан ли бюджет retry
 			if throttle != nil && throttle.Throttle() {
+				slog.Warn("retry: throttled by client throttler", "method", method)
 				return err
 			}
 
 			// если pushback не было — fallback на backoff
 			duration := r.backoff(attemptsSincePushBack, state.cfg)
 			attemptsSincePushBack++
+
+			slog.Info("retry: backoff",
+				"method", method,
+				"delay", duration,
+				"attempts_since_pb", attemptsSincePushBack,
+				"attempt", attempt+1,
+			)
 
 			// Ждем перед повторной попыткой
 			if err = wait(ctx, duration); err != nil {

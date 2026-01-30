@@ -29,8 +29,8 @@ func newInternalState(config MainConfig, name string) *internalState {
 		ReadyToTrip: func(counts gobreaker.Counts) bool {
 			// Срабатываем, если количество ошибок превышает порог
 			// Тут смотрим как на последовательные ошибки, так и на общий процент в окне
-			shouldOpen := counts.ConsecutiveFailures >= config.ThresholdConsecutive ||
-				(counts.Requests > 10 && (counts.TotalFailures*100/counts.Requests) > config.ThresholdPercentage)
+			shouldOpen := counts.Requests > 10 && (counts.ConsecutiveFailures >= config.ThresholdConsecutive ||
+				(counts.TotalFailures*100/counts.Requests) > config.ThresholdPercentage)
 
 			slog.Info(fmt.Sprintf("circuit should open: %v", shouldOpen),
 				"total", counts.Requests,

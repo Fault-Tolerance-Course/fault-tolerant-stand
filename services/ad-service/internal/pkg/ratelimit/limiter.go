@@ -59,6 +59,9 @@ func (l *Limiter) doIfAllowed(ctx context.Context, method string, fn func() erro
 		return fn()
 	}
 
+	// ВСЕГДА ставим Header сразу — состояние на входе
+	setHeader(ctx, limiter)
+
 	if timeout > 0 {
 		waitCtx, cancel := context.WithTimeout(ctx, timeout)
 		defer cancel()
@@ -66,6 +69,8 @@ func (l *Limiter) doIfAllowed(ctx context.Context, method string, fn func() erro
 		err := limiter.Wait(waitCtx)
 
 		if err == nil {
+			// ждали, но прошли
+			setTrailers(ctx, 0)
 			return fn()
 		}
 
@@ -74,6 +79,8 @@ func (l *Limiter) doIfAllowed(ctx context.Context, method string, fn func() erro
 		}
 	}
 
+	// высчитываем время до следующего токена
+	setTrailers(ctx, retryAfter(limiter))
 	return status.Errorf(
 		codes.ResourceExhausted,
 		"rate limit exceeded for %#q client, current max rate per sec.: %d", clientName, int(limiter.Limit()),
@@ -96,4 +103,18 @@ func (l *Limiter) match(state *state, client, handler string) (*rate.Limiter, ti
 		}
 	}
 	return nil, 0
+}
+
+func retryAfter(l *rate.Limiter) time.Duration {
+	now := time.Now()
+
+	r := l.ReserveN(now, 1)
+	if !r.OK() {
+		return rate.InfDuration
+	}
+
+	delay := r.DelayFrom(now)
+	r.CancelAt(now) // ОБЯЗАТЕЛЬНО делаем Cancel, чтобы токен вернулся и потерялся
+
+	return delay
 }

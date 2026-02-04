@@ -1,0 +1,1 @@
+{"tag":"rate-limit-test","call":"/ad_service.ad.v1.AdService/GetAd","metadata":{"content-type":["application/grpc"],"x-client-name": ["api-gateway"]},"payload":{"ad_id": "019c294c-bc74-7472-b3ad-4ad9d92aac53"}}

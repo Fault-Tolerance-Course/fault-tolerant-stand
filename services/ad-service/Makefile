@@ -18,7 +18,7 @@ dependency:
 	GOBIN=$(LOCAL_BIN) go install gotest.tools/gotestsum@v1.7.0
 	GOBIN=$(LOCAL_BIN) go install github.com/not-for-prod/xo@latest
 	GOBIN=$(LOCAL_BIN) go install github.com/pressly/goose/v3/cmd/goose@v3.22.1
-
+	GOBIN=$(LOCAL_BIN) go install github.com/ozontech/framer/cmd/framer@v0.1.2
 
 .PHONY: run
 run:
@@ -76,3 +76,36 @@ xo: migrations-up
 	-o $(XO_OUTPUT_PATH) --template-path $(XO_TEMPLATE_PATH) --schema public --suffix ".xo.go" --custom-type-package custom
 	rm $(XO_OUTPUT_PATH)/goosedbversion.xo.go
 	rm $(XO_OUTPUT_PATH)/xo_db.xo.go
+
+load-convert:
+	$(LOCAL_BIN)/framer convert \
+    --from=ozon.json \
+    --to=ozon.binary \
+    --reflection-addr=localhost:7002 \
+    load/requests.json \
+    load/requests.json.binary
+
+load-run:
+	$(LOCAL_BIN)/framer load  \
+	--addr=localhost:7002 \
+	--requests-file=load/requests.json.binary \
+	--clients 1 \
+	const 70 \
+	--duration 10s \
+	--phout=load/report.phout
+
+# Расчет:
+# C 0 по 1 секунду:
+# Токенов - 100
+# Запросов - 70
+# Все - 200 OK
+# ткенов
+#
+#
+#
+#
+#
+#
+#
+#
+#

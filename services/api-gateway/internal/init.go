@@ -78,7 +78,7 @@ func (a *App) initMainServer(ctx context.Context) error {
 
 		done := make(chan struct{})
 		go func() {
-			err := a.mainServer.Stop(ctx)
+			err := a.mainServer.Stop(gracefulCtx)
 			if err != nil {
 				slog.Error(fmt.Sprintf("stop main server error: %s", err.Error()))
 			}
@@ -89,8 +89,8 @@ func (a *App) initMainServer(ctx context.Context) error {
 		case <-done:
 			slog.Warn("api-gateway: main server gracefully stopped")
 		case <-gracefulCtx.Done():
-			err := fmt.Errorf("api-gateway: error while graceful shutdown server: %w", ctx.Err())
-			_ = a.mainServer.Stop(ctx)
+			err := fmt.Errorf("api-gateway: error while graceful shutdown server: %w", gracefulCtx.Err())
+			_ = a.mainServer.Stop(ctx) // TODO: поправить в либе на hard shutdown (да, заметил поздно :) )
 			return fmt.Errorf("api-gateway: stopped: %w", err)
 		}
 		return nil

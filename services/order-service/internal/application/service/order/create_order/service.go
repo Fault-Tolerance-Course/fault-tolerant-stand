@@ -64,6 +64,9 @@ func (s *Service) Create(ctx context.Context, request CreateRequest) (Details, e
 
 		return s.storage.UpdateOrdersVersion(ctx, request.clientID, version)
 	})
+	if err != nil {
+		return Details{}, err
+	}
 
 	// отправляем событие о создании
 	if err = buf.Flush(ctx); err != nil {

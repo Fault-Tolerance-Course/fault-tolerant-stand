@@ -31,10 +31,10 @@ circuit:
     - method: "/review_service.review.v1.ReviewService/GetAdReview"
       enabled: false
       max_requests: 10
-      open_interval: 3s
+      timeout: 3s
       interval: 10s
-      bucket_period: 1s
-      threshold_consecutive: 5
+      bucket_period: 5s
+      threshold_consecutive: 2
       threshold_percentage: 30
 
 hedge:

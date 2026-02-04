@@ -12,12 +12,6 @@ import (
 )
 
 func (i *Implementation) CreateAd(ctx context.Context, req *adV1.CreateAdRequest) (*adV1.CreateAdResponse, error) {
-	//select {
-	//case <-ctx.Done():
-	//	return nil, status.Error(codes.Canceled, "context cancelled")
-	//case <-time.After(20 * time.Second):
-	//}
-
 	request := create_ad.NewRequest(
 		req.GetTitle(),
 		req.GetCategory(),

@@ -92,7 +92,7 @@ func (s *StrategySingleD) Execute(ctx context.Context, fn RPCFunc) (interface{},
 				s.hedgedReqCount++
 				s.muCounters.Unlock()
 
-				slog.Info(fmt.Sprintf("execute hendged at '%s' after %s", time.Now().String(), d.String()))
+				slog.Info(fmt.Sprintf("execute hedged at '%s' after %s", time.Now().String(), d.String()))
 				execute(s.latencyRingBuf.Append, false)
 			}
 		}()
@@ -102,6 +102,8 @@ func (s *StrategySingleD) Execute(ctx context.Context, fn RPCFunc) (interface{},
 	case <-ctx.Done():
 		return nil, status.FromContextError(ctx.Err()).Err()
 	case resp := <-respCh:
+		// если primary слишком быстрый и обгоняет подсчитанный delay для hedged,
+		// то он может успеть отдать ответ и мы вызовем тут defer cancel(), что исключит запуск hedged вовсе
 		return resp.msg, resp.err
 	}
 }
@@ -142,6 +144,32 @@ func (s *StrategySingleD) computeOptimalDelay(offset float64) (d time.Duration, 
 	}
 
 	d = respTimes[int(float64(len(respTimes)-1)*delayPercentile)]
+
+	/*
+		БЕЗ ОФФСЕТА:
+
+		Допустим, у тебя в буфере последние задержки (в миллисекундах):
+		latencies = [100, 120, 130, 150, 200, 300, 500]
+
+		И цель — 95-й процентиль:
+
+		index = (len(sorted)-1) * 0.95
+
+		index = (7-1) * 0.95 = 6 * 0.95 ≈ 5.7 → округляем вниз → 5
+		sorted[5] = 300ms !!!
+
+
+		C ОФФСЕТОМ:
+
+		delayPercentile = Percentile - offset
+
+		Percentile = 0.95
+		offset = 0.2
+		delayPercentile = 0.95 - 0.2 = 0.75
+
+		index = (len(sorted)-1) * 0.75 = 6 * 0.75 = 4.5 → 4
+		delay = sorted[4] = 200ms !!!
+	*/
 
 	if d == 0 {
 		q = 0

@@ -45,6 +45,9 @@ func (g groupSubscriber) ConsumeClaim(session sarama.ConsumerGroupSession, claim
 			}
 
 			session.MarkMessage(message, "")
+			// Синхронно делаем commit нашего offset'а
+			// Если не вызвать session.Commit() -> будет срабатывать асинхронный коммит раз в интервал
+			session.Commit()
 		case <-ctx.Done():
 			return ctx.Err()
 		}

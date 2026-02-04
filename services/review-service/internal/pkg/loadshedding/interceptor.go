@@ -2,7 +2,6 @@ package loadshedding
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 
 	"google.golang.org/grpc"
@@ -19,8 +18,7 @@ func (ls *LoadShedding) UnaryServerInterceptor() grpc.UnaryServerInterceptor {
 			return handler(ctx, req)
 		}
 
-		slog.Info(fmt.Sprintf("estimated limit before request: %d",
-			state.limitAlg.EstimatedLimit()))
+		estimateLimit(info.FullMethod, state.limitAlg.EstimatedLimit())
 
 		// пробуем захватить токен и выполнить запрос
 		token, ok := state.queueLimiter.Acquire(ctx)

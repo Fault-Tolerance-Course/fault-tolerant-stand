@@ -27,7 +27,6 @@ message GetAdReviewResponse {
 }
 
 message UnstableMethodRequest {
-  bool slowdown = 1;
 }
 
 message UnstableMethodResponse{

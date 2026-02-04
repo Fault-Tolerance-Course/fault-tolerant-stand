@@ -17,6 +17,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/not-for-prod/clay/server"
 	"github.com/not-for-prod/clay/transport"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/keepalive"
 )
@@ -44,6 +45,9 @@ func (a *App) initControllers(_ context.Context) error {
 
 func (a *App) initMainServer(ctx context.Context) error {
 	a.mux = chi.NewMux()
+
+	a.mux.Handle("/metrics", promhttp.Handler())
+
 	// init server (htt,grpc)
 	a.mainServer = server.NewServer(
 		config.Instance().GrpcServer.Port,
@@ -58,8 +62,6 @@ func (a *App) initMainServer(ctx context.Context) error {
 			}),
 			grpc.ChainUnaryInterceptor(
 				intercept.ErrorInterceptor(),
-				//intercept.HedgedDemoInterceptor(),
-				intercept.CircuitDemoInterceptor(),
 				loadshedding.NewLoadShedding(config.Instance().LoadShedding).UnaryServerInterceptor(),
 			),
 		),

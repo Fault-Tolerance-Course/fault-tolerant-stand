@@ -113,7 +113,6 @@ func (x *GetAdReviewResponse) GetReview() *GetAdReviewResponse_Review {
 
 type UnstableMethodRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Slowdown      bool                   `protobuf:"varint,1,opt,name=slowdown,proto3" json:"slowdown,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -146,13 +145,6 @@ func (x *UnstableMethodRequest) ProtoReflect() protoreflect.Message {
 // Deprecated: Use UnstableMethodRequest.ProtoReflect.Descriptor instead.
 func (*UnstableMethodRequest) Descriptor() ([]byte, []int) {
 	return file_review_service_review_v1_review_proto_rawDescGZIP(), []int{2}
-}
-
-func (x *UnstableMethodRequest) GetSlowdown() bool {
-	if x != nil {
-		return x.Slowdown
-	}
-	return false
 }
 
 type UnstableMethodResponse struct {
@@ -246,9 +238,8 @@ const file_review_service_review_v1_review_proto_rawDesc = "" +
 	"\x06review\x18\x01 \x01(\v24.review_service.review.v1.GetAdReviewResponse.ReviewR\x06review\x1a=\n" +
 	"\x06Review\x123\n" +
 	"\n" +
-	"avg_review\x18\x01 \x01(\v2\x14.google.type.DecimalR\tavgReview\"3\n" +
-	"\x15UnstableMethodRequest\x12\x1a\n" +
-	"\bslowdown\x18\x01 \x01(\bR\bslowdown\"\x18\n" +
+	"avg_review\x18\x01 \x01(\v2\x14.google.type.DecimalR\tavgReview\"\x17\n" +
+	"\x15UnstableMethodRequest\"\x18\n" +
 	"\x16UnstableMethodResponse2\xf0\x01\n" +
 	"\rReviewService\x12j\n" +
 	"\vGetAdReview\x12,.review_service.review.v1.GetAdReviewRequest\x1a-.review_service.review.v1.GetAdReviewResponse\x12s\n" +

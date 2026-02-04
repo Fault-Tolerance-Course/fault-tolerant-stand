@@ -148,12 +148,7 @@
       }
     },
     "review_service.review.v1.UnstableMethodRequest": {
-      "type": "object",
-      "properties": {
-        "slowdown": {
-          "type": "boolean"
-        }
-      }
+      "type": "object"
     },
     "review_service.review.v1.UnstableMethodResponse": {
       "type": "object"

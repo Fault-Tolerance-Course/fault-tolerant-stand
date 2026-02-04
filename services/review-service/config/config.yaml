@@ -15,43 +15,21 @@ http_server:
 services:
   blob: blob
 
-
-# Config for limit decrease
 load_shedding:
   handlers:
     - method: "/review_service.review.v1.ReviewService/UnstableMethod"
       enabled: true
       limiter:
-        window_size: 10
-        min_window_time: 50ms
-        max_window_time: 200ms
-        min_rtt_threshold: 1ms
-        max_backlog_size: 5       # уменьшить, чтобы очередь быстро переполнялась
-        max_backlog_wait_time: 1s  # уменьшить, чтобы запросы быстрее дропались
+        window_size: 100               # маленькое окно, быстрый пересчёт
+        min_window_time: 200ms
+        max_window_time: 500ms
+        min_rtt_threshold: 1ms        # учитывать все запросы
+        max_backlog_size: 1000         # очередь, чтобы Vegas видел переполнение
+        max_backlog_wait_time: 2s
       vegas:
-        initial_max_inflight_limit: 50
-        max_inflight_limit: 10000
-        smoothing: 1.0      # мгновенные изменения лимита
-        alpha_func_coefficient: 1
-        beta_func_coefficient: 3
+        initial_max_inflight_limit: 20  # стартуем с небольшого лимита
+        max_inflight_limit: 10000         # верхняя граница роста
+        smoothing: 1.0                 # достаточно быстро реагируем на падение
+        alpha_func_coefficient: 3      # рост умеренный
+        beta_func_coefficient: 6      # падение агрессивное
         rtt_no_load_probe_multiplier: 1
-
-# Config for limit increase
-#load_shedding:
-#  handlers:
-#    - method: "/review_service.review.v1.ReviewService/UnstableMethod"
-#      enabled: true
-#      limiter:
-#        window_size: 60
-#        min_window_time: 200ms
-#        max_window_time: 5s
-#        min_rtt_threshold: 10ms
-#        max_backlog_size: 200
-#        max_backlog_wait_time: 2s
-#      vegas:
-#        initial_max_inflight_limit: 3
-#        max_inflight_limit: 50
-#        smoothing: 0.5
-#        rtt_no_load_probe_multiplier: 3
-#        alpha_func_coefficient: 5
-#        beta_func_coefficient: 20

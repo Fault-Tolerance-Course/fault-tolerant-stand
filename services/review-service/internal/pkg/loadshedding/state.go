@@ -30,11 +30,11 @@ type internalState struct {
 
 func newInternalState(config MainConfig) (*internalState, error) {
 	// создаем noop logger
-	logger := limit.Logger(limit.NoopLimitLogger{})
+	logger := limit.Logger(limit.BuiltinLimitLogger{})
 
 	// выбираем самую простую стратегию, которая
 	// управляет общим лимитом без ухищрений в виде партиций, типа нагрузки и т.п.
-	strategy := strategy.NewSimpleStrategy(config.Vegas.InitialMaxInflightLimit)
+	simpleStrategy := strategy.NewSimpleStrategy(config.Vegas.InitialMaxInflightLimit)
 
 	// подготавливаем параметры для алгоритма лимитирования
 	defaultLogFunc := functions.Log10RootFunction(0)
@@ -66,12 +66,12 @@ func newInternalState(config MainConfig) (*internalState, error) {
 
 	// создаем обертку над алгоритмом и стратегией в условиях ограничения (окно временное), ибо считать за все время нельзя
 	defaultLimiter, err := limiter.NewDefaultLimiter(
-		algorithm,                                    // указываем созданный алгоритм
+		algorithm, // указываем созданный алгоритм
 		config.Limiter.MinWindowTime.Nanoseconds(),   // минимальный размер окна для перерасчета (время)
 		config.Limiter.MaxWindowTime.Nanoseconds(),   // максимальный размер окна для перерасчета (время)
 		config.Limiter.MinRTTThreshold.Nanoseconds(), // минимальный latency, ниже которого не учитываем значения
 		config.Limiter.WindowSize,                    // размер окна в запросах!
-		strategy,                                     // стратегия
+		simpleStrategy,                               // стратегия
 		logger,
 		nil,
 	)

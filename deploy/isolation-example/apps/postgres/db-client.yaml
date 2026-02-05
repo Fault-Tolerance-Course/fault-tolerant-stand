@@ -1,0 +1,55 @@
+# psql postgres://postgres:12345678@postgres-server.isolation-example.svc.cluster.local:40200/example
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: isolation-example
+  name: postgres-client
+spec:
+  replicas: 1 # Не меняем это, клиент нужен только один
+  # Ограничение ресурсов на уровне всего пода
+  # Требует PodLevelResources feature-gate
+  # resources:
+  #   resources:
+  #     requests:
+  #       memory: "128Mi"
+  #       cpu: "100m"
+  #     limits:
+  #       memory: "128Mi"
+  #       cpu: "100m"
+  selector:
+    matchLabels:
+      app: postgres-client
+  template:
+    metadata:
+      labels:
+        app: postgres-client
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15
+          command: ["sleep", "infinity"]
+          args: []
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: password
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: database
+          # Ограничение ресурсов на уровне контейнера
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "128Mi"
+              cpu: "100m"

@@ -1,0 +1,91 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  namespace: isolation-example
+  name: postgres-data
+spec:
+  storageClassName: local-path
+  accessModes:
+    - ReadWriteOnce
+  # изолируем объём хранилища
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: isolation-example
+  name: postgres-server
+spec:
+  replicas: 1 # Не меняем это
+  # Ограничение ресурсов на уровне всего пода
+  # Требует PodLevelResources feature-gate
+  # resources:
+  #   requests:
+  #     memory: "512Mi"
+  #     cpu: "1"
+  #   limits:
+  #     memory: "1Gi"
+  #     cpu: "4"
+  selector:
+    matchLabels:
+      app: postgres-server
+  template:
+    metadata:
+      labels:
+        app: postgres-server
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15
+          ports:
+            - containerPort: 5432
+              protocol: TCP
+              name: api
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: password
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: database
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+          # Ограничение ресурсов на уровне контейнера
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "400m"
+      volumes:
+        - name: postgres-data
+          persistentVolumeClaim:
+            claimName: postgres-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: isolation-example
+  name: postgres-server
+spec:
+  type: ClusterIP
+  selector:
+    app: postgres-server
+  ports:
+    - name: http
+      port: 40200
+      targetPort: 5432
+      protocol: TCP

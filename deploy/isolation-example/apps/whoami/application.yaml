@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: isolation-example
+  name: whoami
+spec:
+  replicas: 4
+  # Ограничение ресурсов на уровне всего пода
+  # Требует PodLevelResources feature-gate
+  # resources:
+  #   requests:
+  #     memory: "512Mi"
+  #     cpu: "1"
+  #   limits:
+  #     memory: "1Gi"
+  #     cpu: "4"
+  selector:
+    matchLabels:
+      app: whoami
+  template:
+    metadata:
+      labels:
+        app: whoami
+      annotations:
+        kubernetes.io/ingress-bandwidth: "10M"
+        kubernetes.io/egress-bandwidth: "10M"
+    spec:
+      containers:
+        - name: whoami
+          image: traefik/whoami:v1.11
+          ports:
+            - name: http-gateway
+              containerPort: 80
+              protocol: TCP
+          # Ограничение ресурсов на уровне контейнера
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "60m"
+            limits:
+              memory: "128Mi"
+              cpu: "100m"

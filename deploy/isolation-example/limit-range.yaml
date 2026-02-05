@@ -1,0 +1,26 @@
+# Ограничение ресурсов, потребляемых каждым подом внутри Namespace
+apiVersion: v1
+kind: LimitRange
+metadata:
+  namespace: isolation-example
+  name: default-limits
+spec:
+  limits:
+  - type: Container
+    defaultRequest:
+      cpu: "50m"
+      memory: "128Mi"
+    default: # limit
+      cpu: "100m"
+      memory: "256Mi"
+    min:
+      cpu: "10m"
+      memory: "16Mi"
+    max:
+      cpu: "4"
+      memory: "4Gi"
+    
+    # Ограничение соотношения limit/request
+    maxLimitRequestRatio:
+      memory: "2" # Нельзя, чтобы limit.memory превышал request.memory более, чем в 2 раза
+      cpu: "10" # Нельзя, чтобы limit.cpu превышал request.cpu более, чем в 10 раз

@@ -1,0 +1,52 @@
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  namespace: isolation-example
+  name: postgres-server-network-policy
+spec:
+  podSelector:
+    matchLabels:
+      app: postgres-server
+  policyTypes:
+    - Ingress
+    - Egress
+  egress: []
+  ingress:
+    - from:
+      # Разрешаем трафик из этого же namespace на под postgres-client
+      - namespaceSelector:
+          matchLabels:
+            name: isolation-example
+        podSelector:
+          matchLabels:
+            name: postgres-client
+      ports:
+        - protocol: TCP
+          port: 5432
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  namespace: isolation-example
+  name: postgres-client-network-policy
+spec:
+  podSelector:
+    matchLabels:
+      app: postgres-client
+  policyTypes:
+    - Ingress
+    - Egress
+  egress: 
+    - to:
+      # Разрешаем трафик в этот же namespace на под postgres-server
+      - namespaceSelector:
+          matchLabels:
+            name: isolation-example
+        podSelector:
+          matchLabels:
+            name: postgres-server
+      ports:
+        - protocol: TCP
+          port: 5432
+  ingress: []

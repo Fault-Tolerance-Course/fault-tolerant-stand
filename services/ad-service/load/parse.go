@@ -4,10 +4,19 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
 )
+
+type Record struct {
+	StartTime time.Time
+	Tag       string
+	Latency   time.Duration
+	ReqSize   string
+	Code      string
+}
 
 func main() {
 	file := "./load/report.phout"
@@ -18,10 +27,8 @@ func main() {
 	defer f.Close()
 
 	scanner := bufio.NewScanner(f)
+	records := make([]Record, 0)
 
-	fmt.Printf("%s %-23s %-15s %-6s %-6s %-8s\n", "Number", "Start Time", "Tag", "Latency", "ReqSize", "Code")
-
-	i := 1
 	for scanner.Scan() {
 		line := scanner.Text()
 		fields := strings.Split(line, "\t")
@@ -29,7 +36,6 @@ func main() {
 			continue
 		}
 
-		// поле 0 = timestamp как float (seconds.milliseconds)
 		tsFloat, err := strconv.ParseFloat(fields[0], 64)
 		if err != nil {
 			continue
@@ -52,12 +58,38 @@ func main() {
 			code = "OK"
 		case "grpc_8":
 			code = "RESOURCE_EXHAUSTED"
+		default:
+			code = fields[11]
 		}
-		fmt.Printf("[%d] %-23s %-15s %-6s %-6s %-8s\n", i, t.Format("15:04:05.000"), tag, ms.String(), reqSize, code)
-		i++
+
+		records = append(records, Record{
+			StartTime: t,
+			Tag:       tag,
+			Latency:   ms,
+			ReqSize:   reqSize,
+			Code:      code,
+		})
 	}
 
 	if err := scanner.Err(); err != nil {
 		panic(err)
+	}
+
+	// Сортировка по StartTime
+	sort.Slice(records, func(i, j int) bool {
+		return records[i].StartTime.Before(records[j].StartTime)
+	})
+
+	// Вывод
+	fmt.Printf("%s %-23s %-15s %-10s %-10s %-15s\n", "Number", "Start Time", "Tag", "Latency", "ReqSize", "Code")
+	for i, r := range records {
+		fmt.Printf("[%d] %-23s %-15s %-10s %-10s %-15s\n",
+			i+1,
+			r.StartTime.Format("15:04:05.000"),
+			r.Tag,
+			r.Latency.String(),
+			r.ReqSize,
+			r.Code,
+		)
 	}
 }

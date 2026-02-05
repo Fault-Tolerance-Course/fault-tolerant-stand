@@ -51,6 +51,6 @@ rate_limit:
   rules:
     - clients: ["api-gateway"]
       handlers: ["/ad_service.ad.v1.AdService/GetAd"]
-      limit: 50
-      burst: 100
+      limit: 40
+      burst: 70
       timeout: 700ms # timeout=(requests−burst)*(1/limit) + %

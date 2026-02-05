@@ -21,15 +21,15 @@ load_shedding:
       enabled: true
       limiter:
         window_size: 100               # маленькое окно, быстрый пересчёт
-        min_window_time: 200ms
-        max_window_time: 500ms
+        min_window_time: 1s
+        max_window_time: 2s
         min_rtt_threshold: 1ms        # учитывать все запросы
         max_backlog_size: 1000         # очередь, чтобы Vegas видел переполнение
         max_backlog_wait_time: 2s
       vegas:
-        initial_max_inflight_limit: 20  # стартуем с небольшого лимита
+        initial_max_inflight_limit: 40  # стартуем с небольшого лимита
         max_inflight_limit: 10000         # верхняя граница роста
-        smoothing: 1.0                 # достаточно быстро реагируем на падение
-        alpha_func_coefficient: 3      # рост умеренный
-        beta_func_coefficient: 6      # падение агрессивное
+        smoothing: 1.0                 # достаточно резко реагируем на изменение
+        alpha_func_coefficient: 3
+        beta_func_coefficient: 6
         rtt_no_load_probe_multiplier: 1

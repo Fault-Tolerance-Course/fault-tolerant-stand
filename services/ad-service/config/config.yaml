@@ -53,4 +53,4 @@ rate_limit:
       handlers: ["/ad_service.ad.v1.AdService/GetAd"]
       limit: 40
       burst: 70
-      timeout: 700ms # timeout=(requests−burst)*(1/limit) + %
+      timeout: 700ms

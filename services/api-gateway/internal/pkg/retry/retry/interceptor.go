@@ -2,13 +2,10 @@ package retry
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"math"
 	"math/rand/v2"
 	"time"
-
-	"api-gateway/internal/pkg/retry/pushback"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
@@ -25,15 +22,10 @@ func (r *Retry) UnaryClientInterceptor() grpc.UnaryClientInterceptor {
 			return invoker(ctx, method, req, reply, cc, opts...)
 		}
 
-		var (
-			throttle              = state.throttler
-			lastErr               error
-			attemptsSincePushBack int
-		)
+		var throttle = state.throttler
 
+		var lastErr error
 		for attempt := 0; attempt < state.cfg.MaxAttempts; attempt++ {
-			slog.Info("retry: invoke", "method", method, "attempts", attempt)
-
 			// Проверяем, отменен ли контекст
 			select {
 			case <-ctx.Done():
@@ -41,32 +33,28 @@ func (r *Retry) UnaryClientInterceptor() grpc.UnaryClientInterceptor {
 			default:
 			}
 
+			attemptsTotal.WithLabelValues(method).Inc()
+
 			// проверяем бюджет, если это retry
 			if attempt != 0 {
 				if throttle != nil && throttle.Throttle() {
+					throttledTotal.WithLabelValues(method).Inc()
 					return lastErr
 				}
 			}
-
-			// добавляем x-retry-attempt & x-retry-max-attempts для демонстрации
-			// в production такое делать не обязательно :)
-			md := metadata.Pairs(
-				"x-retry-attempt", fmt.Sprintf("%d", attempt),
-				"x-retry-max-attempts", fmt.Sprintf("%d", state.cfg.MaxAttempts),
-			)
-			ctxWithMD := metadata.NewOutgoingContext(ctx, md)
 
 			// готовим трейлеры и заголовки для получения в ответе
 			var trailer metadata.MD
 			callOpts := append(opts, grpc.Trailer(&trailer))
 
-			lastErr = invoker(ctxWithMD, method, req, reply, cc, callOpts...)
+			lastErr = invoker(ctx, method, req, reply, cc, callOpts...)
 			// запрос завершился без ошибки
 			if lastErr == nil {
 				if throttle != nil {
 					// засчитываем успех и пополняем токены
 					throttle.SuccessfulRPC()
 				}
+				successTotal.WithLabelValues(method).Inc()
 				return nil
 			}
 
@@ -75,48 +63,17 @@ func (r *Retry) UnaryClientInterceptor() grpc.UnaryClientInterceptor {
 				return lastErr
 			}
 
+			// Считаем retry для всех attempt>0, которые реально выполнились
+			if attempt > 0 {
+				retriesTotal.WithLabelValues(method).Inc()
+			}
+
 			// смотрим, дошли ли мы до последней попытки?
 			if attempt == state.cfg.MaxAttempts-1 {
 				return lastErr
 			}
 
-			// parse pushback
-			pb := pushback.Parse(trailer)
-
-			// если сервер передал пушбек
-			if pb.Has {
-				slog.Info("retry: server pushback",
-					"method", method,
-					"reject", pb.Reject,
-					"delay", pb.Delay,
-				)
-
-				if pb.Reject {
-					// сервер сказал "не ретраить"
-					return lastErr
-				}
-
-				// сервер дал delay -> сбрасываем backoff
-				attemptsSincePushBack = 0
-
-				if err := wait(ctx, pb.Delay); err != nil {
-					return err
-				}
-				// retry после pushback -> без throttle check
-				continue
-			}
-
-			// если pushback не было — fallback на backoff
-			duration := r.backoff(attemptsSincePushBack, state.cfg)
-			attemptsSincePushBack++
-
-			slog.Info("retry: backoff",
-				"method", method,
-				"delay", duration,
-				"attempts_since_pb", attemptsSincePushBack,
-				"attempt", attempt+1,
-			)
-
+			duration := r.backoff(attempt, state.cfg)
 			// Ждем перед повторной попыткой
 			if err := wait(ctx, duration); err != nil {
 				return err
@@ -126,10 +83,10 @@ func (r *Retry) UnaryClientInterceptor() grpc.UnaryClientInterceptor {
 	}
 }
 
-func (r *Retry) backoff(attemptsBeforePushBack int, cfg MainConfig) time.Duration {
+func (r *Retry) backoff(attempt int, cfg MainConfig) time.Duration {
 	// используем attemptsBeforePushBack для явного разделения сценариев
 	// Ибо в случае с pushback - сервер явно говорит клиенту о том, что ему надо пересмотреть свою backoff стратегию
-	fact := math.Pow(cfg.BackoffMultiplier, float64(attemptsBeforePushBack))
+	fact := math.Pow(cfg.BackoffMultiplier, float64(attempt))
 	cur := min(float64(cfg.InitialBackoff)*fact, float64(cfg.MaxBackoff))
 
 	// Применяем рандомный jitter с фактором между 0.8 and 1.2

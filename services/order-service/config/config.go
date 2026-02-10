@@ -24,6 +24,8 @@ type Config struct {
 	Kafka    Kafka    `yaml:"kafka"`
 	Postgres Postgres `yaml:"postgres"`
 
+	Outbox Outbox `yaml:"outbox"`
+
 	Targets map[string]string `yaml:"service"`
 }
 
@@ -68,4 +70,8 @@ func (c Config) PostgresDSN() string {
 		c.Postgres.Port,
 		c.Postgres.Database,
 	)
+}
+
+func (c Config) OutboxConfig(topic string) OutboxHandler {
+	return c.Outbox.Topics[topic]
 }

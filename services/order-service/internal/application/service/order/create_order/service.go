@@ -62,14 +62,15 @@ func (s *Service) Create(ctx context.Context, request CreateRequest) (Details, e
 		// если заказ был создан и проблем не наблюдалось - повышаем версию
 		version.Inc()
 
-		return s.storage.UpdateOrdersVersion(ctx, request.clientID, version)
+		err = s.storage.UpdateOrdersVersion(ctx, request.clientID, version)
+		if err != nil {
+			return err
+		}
+
+		// отправляем событие о создании
+		return buf.Flush(ctx)
 	})
 	if err != nil {
-		return Details{}, err
-	}
-
-	// отправляем событие о создании
-	if err = buf.Flush(ctx); err != nil {
 		return Details{}, err
 	}
 

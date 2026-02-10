@@ -23,7 +23,7 @@ func (m *MessageProducer) Close() error {
 	return m.producer.Close()
 }
 
-func (m *MessageProducer) Flush(_ context.Context, events event.Events) error {
+func (m *MessageProducer) Handle(_ context.Context, events event.Events) error {
 	return m.producer.SendMessages(lo.Map(events, func(msg event.Event, _ int) *sarama.ProducerMessage {
 		return &sarama.ProducerMessage{
 			Topic:   msg.Schema,

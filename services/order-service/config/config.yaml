@@ -15,6 +15,19 @@ http_server:
 kafka:
   brokers: [ "kafka:9092" ]
 
+outbox:
+  limits:
+    locked_keys_limit: 100
+    messages_limit: 1000
+    max_err_count_for_message: 5
+
+  topics:
+    order-events:
+      batch_size: 100
+      worker:
+        interval: 5s
+        concurrency: 1
+
 postgres:
   host: order-postgres
   port: 5432

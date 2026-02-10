@@ -14,6 +14,8 @@ type Events []Event
 
 // Event событие системы
 type Event struct {
+	// Идентификатор сущности
+	EntityID string
 	// Ключ, тело и заголовки сообщения
 	Key, Body, Headers Raw
 	// Schema идентификатор схемы (топика) сообщения

@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	OrderEventsTopic = "payment-events"
+	OrderEventsTopic = "order-events"
 )
 
 var (

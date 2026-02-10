@@ -11,6 +11,8 @@ import (
 	"order-service/internal/pkg/event"
 
 	"order-service/internal/pkg/pipe"
+
+	"github.com/gofrs/uuid"
 )
 
 type OrderCreatedEvent struct {
@@ -37,10 +39,12 @@ func New(order *entity.Order) pipe.Func[event.Events] {
 			return nil, err
 		}
 
+		correlationID, _ := uuid.NewV7()
 		// загорловки в сообщении любые
 		headers := map[string]string{
-			"x-app-name":   "order-service",
-			"x-event-type": "order-created",
+			"x-correlation-id": correlationID.String(),
+			"x-app-name":       "order-service",
+			"x-event-type":     "order-created",
 		}
 
 		// это выносится в общие функции
@@ -50,10 +54,11 @@ func New(order *entity.Order) pipe.Func[event.Events] {
 		}
 
 		return append(events, event.Event{
-			Key:     event.Raw(order.ID().String()),
-			Body:    body,
-			Headers: headersRaw,
-			Schema:  config.OrderEventsTopic,
+			EntityID: order.ID().String(),
+			Key:      event.Raw(order.ID().String()),
+			Body:     body,
+			Headers:  headersRaw,
+			Schema:   config.OrderEventsTopic,
 		}), nil
 	}
 }

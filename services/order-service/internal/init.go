@@ -4,15 +4,20 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"time"
 
 	"order-service/config"
 	v1 "order-service/internal/app/order/v1"
 	"order-service/internal/application/service"
 	"order-service/internal/infrastructure/dal"
 	"order-service/internal/infrastructure/messagebus"
+	"order-service/internal/infrastructure/outbox/order_events"
+	"order-service/internal/pkg/closer"
 	"order-service/internal/pkg/connector/postgres"
 	"order-service/internal/pkg/grpc/intercept"
+	"order-service/internal/pkg/outbox"
 	orderV1 "order-service/internal/pkg/pb/order-service/order/v1"
+	"order-service/internal/pkg/worker"
 
 	"github.com/go-chi/chi/v5"
 
@@ -39,6 +44,31 @@ func (a *App) initPostgres(ctx context.Context) error {
 	return nil
 }
 
+func (a *App) initOutbox(ctx context.Context) error {
+	a.outbox = outbox.NewOutbox(a.pool, config.Instance().Outbox.Limits, outbox.WithMetrics())
+
+	// register handlers
+	a.outbox.RegisterHandler(order_events.NewHandler(
+		config.OrderEventsTopic, // топик
+		config.Instance().OutboxConfig(config.OrderEventsTopic).BatchSize, // размер батча обработки
+		a.messageBus.Producers.OrderEvents,                                // producer
+	))
+
+	// init background message relay
+	a.messageRelay = worker.NewWorker(ctx,
+		a.outbox.HandlePendingMessages,
+		func(ctx context.Context) time.Duration {
+			return config.Instance().OutboxConfig(config.OrderEventsTopic).Worker.Interval
+		},
+		func(ctx context.Context) int {
+			return config.Instance().OutboxConfig(config.OrderEventsTopic).Worker.Concurrency
+		},
+	)
+
+	closer.Add(a.messageRelay.Stop)
+	return nil
+}
+
 func (a *App) initMessageBus(_ context.Context) error {
 	if a.messageBus == nil {
 		a.messageBus = messagebus.NewRegistry()
@@ -55,7 +85,7 @@ func (a *App) initDAL(_ context.Context) error {
 
 func (a *App) initServices(_ context.Context) error {
 	if a.services == nil {
-		a.services = service.NewRegistry(a.dal, a.messageBus)
+		a.services = service.NewRegistry(a.dal, a.outbox)
 	}
 	return nil
 }
@@ -78,7 +108,6 @@ func (a *App) initMainServer(ctx context.Context) error {
 			grpc.ChainUnaryInterceptor(
 				intercept.ExtractClientNameInterceptor(),
 				intercept.ErrorInterceptor(),
-				intercept.RetryDemoInterceptor(), // эмуляция сбоя для retry
 			)),
 	)
 

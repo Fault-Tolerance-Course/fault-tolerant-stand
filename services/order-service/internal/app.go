@@ -8,6 +8,8 @@ import (
 	"syscall"
 
 	"order-service/config"
+	"order-service/internal/pkg/outbox"
+	"order-service/internal/pkg/worker"
 
 	"order-service/internal/application/service"
 	"order-service/internal/infrastructure/dal"
@@ -37,6 +39,10 @@ type App struct {
 
 	messageBus *messagebus.Registry
 
+	outbox *outbox.Outbox
+
+	messageRelay worker.Worker
+
 	controllers []transport.ServiceDesc
 }
 
@@ -52,7 +58,7 @@ func New(ctx context.Context) *App {
 }
 
 // Run запуск приложения
-func (a *App) Run(_ context.Context) {
+func (a *App) Run(ctx context.Context) {
 	if a.mainServer != nil {
 		go func() {
 			if err := a.mainServer.Run(a.controllers...); err != nil {
@@ -60,6 +66,13 @@ func (a *App) Run(_ context.Context) {
 				a.publicCloser.CloseAll()
 			}
 		}()
+	}
+
+	if a.messageRelay != nil {
+		err := a.messageRelay.Start(ctx)
+		if err != nil {
+			slog.Error(fmt.Sprintf("message relay: %s", err.Error()))
+		}
 	}
 
 	slog.Info(fmt.Sprintf("APP STARTED ON PORTS => GRPC: %d, HTTP: %d",
@@ -76,8 +89,9 @@ func (a *App) init(ctx context.Context) error {
 	initFuncs := []func(context.Context) error{
 		a.initMainServer,
 		a.initPostgres,
-		a.initMessageBus,
 		a.initDAL,
+		a.initMessageBus,
+		a.initOutbox,
 		a.initServices,
 		a.initControllers,
 	}

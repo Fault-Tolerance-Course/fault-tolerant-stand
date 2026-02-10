@@ -1,9 +1,13 @@
 package config
 
-import "time"
+import (
+	"time"
+
+	"order-service/internal/pkg/outbox"
+)
 
 const (
-	OrderEventsTopic = "payment-events"
+	OrderEventsTopic = "order-events"
 )
 
 type GrpcServer struct {
@@ -38,4 +42,19 @@ type Postgres struct {
 
 type Graceful struct {
 	Timeout time.Duration `yaml:"timeout"`
+}
+
+type Outbox struct {
+	Limits outbox.Config            `json:"limits"`
+	Topics map[string]OutboxHandler `yaml:"topics"`
+}
+
+type OutboxHandler struct {
+	BatchSize int    `yaml:"batch_size"`
+	Worker    Worker `yaml:"worker"`
+}
+
+type Worker struct {
+	Interval    time.Duration `yaml:"interval"`
+	Concurrency int           `yaml:"concurrency"`
 }

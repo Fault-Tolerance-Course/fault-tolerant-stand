@@ -16,6 +16,24 @@ kafka:
   brokers: [ "kafka:9092" ]
   consumer_group: payment-service-payment-events
 
+etcd:
+  endpoints: [ "etcd:2379" ]
+  dial_timeout: 5s
+
+leader_election:
+  key: "/services/payment-service/inbox/leader"
+
+inbox:
+  config:
+    messages_limit: 1000
+    max_err_count_for_message: 5
+    normal_messages_poll_interval: 2s
+    error_messages_poll_interval: 10s
+
+  topics:
+    order-events:
+      batch_size: 100
+
 postgres:
   host: payment-postgres
   port: 5432

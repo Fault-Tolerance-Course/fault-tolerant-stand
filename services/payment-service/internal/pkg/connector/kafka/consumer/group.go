@@ -1,6 +1,8 @@
 package consumer
 
-import "github.com/IBM/sarama"
+import (
+	"github.com/IBM/sarama"
+)
 
 type groupSubscriber struct {
 	messageHandler MessageHandler

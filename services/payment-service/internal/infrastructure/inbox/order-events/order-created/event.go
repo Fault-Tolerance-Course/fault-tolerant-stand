@@ -1,14 +1,8 @@
-package event
+package order_created
 
 import (
 	"encoding/json"
 	"time"
-
-	"github.com/IBM/sarama"
-)
-
-const (
-	eventTypeOrderCreated = "order-created"
 )
 
 type OrderCreated struct {
@@ -20,10 +14,9 @@ type OrderCreated struct {
 	AdID      string    `json:"ad_id"`
 }
 
-// Deserialize переводит сообщение из одного представления в другое и валидирует
-func Deserialize(message *sarama.ConsumerMessage) (OrderCreated, error) {
+func deserialize(payload []byte) (OrderCreated, error) {
 	var orderCreated OrderCreated
-	err := json.Unmarshal(message.Value, &orderCreated)
+	err := json.Unmarshal(payload, &orderCreated)
 	if err != nil {
 		return OrderCreated{}, err
 	}

@@ -7,6 +7,7 @@ import (
 
 	"order-service/config"
 	"order-service/internal/domain/entity"
+	"order-service/internal/events"
 
 	"order-service/internal/pkg/event"
 
@@ -25,16 +26,23 @@ type OrderCreatedEvent struct {
 }
 
 func New(order *entity.Order) pipe.Func[event.Events] {
-	return func(ctx context.Context, events event.Events) (event.Events, error) {
+	return func(ctx context.Context, batch event.Events) (event.Events, error) {
 		// формируем событие
-		body, err := json.Marshal(&OrderCreatedEvent{
-			ID:        order.ID().String(),
-			Status:    string(order.Status()),
-			Price:     order.Price().String(),
-			ClientID:  order.ClientID().String(),
-			AdID:      order.AdID().String(),
-			CreatedAt: order.CreatedAt(),
-		})
+		baseEvent := events.Base[OrderCreatedEvent]{
+			EventType: "order-created",
+			EntityID:  order.ID().String(),
+			Payload: OrderCreatedEvent{
+				ID:        order.ID().String(),
+				Status:    string(order.Status()),
+				Price:     order.Price().String(),
+				ClientID:  order.ClientID().String(),
+				AdID:      order.AdID().String(),
+				CreatedAt: order.CreatedAt(),
+			},
+		}
+
+		// формируем событие
+		body, err := json.Marshal(baseEvent)
 		if err != nil {
 			return nil, err
 		}
@@ -53,7 +61,7 @@ func New(order *entity.Order) pipe.Func[event.Events] {
 			return nil, err
 		}
 
-		return append(events, event.Event{
+		return append(batch, event.Event{
 			EntityID: order.ID().String(),
 			Key:      event.Raw(order.ID().String()),
 			Body:     body,

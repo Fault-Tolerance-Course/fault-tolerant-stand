@@ -1,6 +1,10 @@
 package config
 
-import "time"
+import (
+	"time"
+
+	"payment-service/internal/pkg/inbox"
+)
 
 type Graceful struct {
 	Timeout time.Duration `yaml:"timeout"`
@@ -25,6 +29,15 @@ type Kafka struct {
 	ConsumerGroup string   `yaml:"consumer_group"`
 }
 
+type ETCD struct {
+	Endpoints   []string      `yaml:"endpoints"`
+	DialTimeout time.Duration `yaml:"dial_timeout"`
+}
+
+type LeaderElection struct {
+	Key string `yaml:"key"`
+}
+
 type Postgres struct {
 	Host               string        `yaml:"host"`
 	Port               int32         `yaml:"port"`
@@ -35,4 +48,18 @@ type Postgres struct {
 	MinConnections     int32         `yaml:"min_connections"`
 	MaxIdleConnections int32         `yaml:"max_idle_connections"`
 	MaxConnLifetime    time.Duration `yaml:"max_conn_lifetime"`
+}
+
+type Inbox struct {
+	Config inbox.Config            `json:"config"`
+	Topics map[string]InboxHandler `yaml:"topics"`
+}
+
+type InboxHandler struct {
+	BatchSize int `yaml:"batch_size"`
+}
+
+type Worker struct {
+	Interval    time.Duration `yaml:"interval"`
+	Concurrency int           `yaml:"concurrency"`
 }

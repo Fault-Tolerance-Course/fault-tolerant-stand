@@ -3,14 +3,14 @@ package messagebus
 import (
 	"context"
 
-	"payment-service/internal/application/service"
 	"payment-service/internal/infrastructure/messagebus/subscriber"
 	"payment-service/internal/infrastructure/messagebus/subscriber/scheme/order_events"
 	"payment-service/internal/pkg/closer"
+	"payment-service/internal/pkg/inbox"
 )
 
 type handlers struct {
-	OrderEvents *order_events.Registry
+	OrderEvents *order_events.MessageHandler
 }
 
 type Registry struct {
@@ -18,11 +18,11 @@ type Registry struct {
 	subscribers subscriber.Subscribers
 }
 
-func NewRegistry(services *service.Registry) *Registry {
+func NewRegistry(inbox *inbox.Inbox) *Registry {
 	registry := &Registry{
 		subscribers: subscriber.NewSubscribers(),
 		handlers: handlers{
-			OrderEvents: order_events.NewRegistry(services),
+			OrderEvents: order_events.NewMessageHandler(inbox),
 		},
 	}
 
@@ -32,5 +32,5 @@ func NewRegistry(services *service.Registry) *Registry {
 
 func (r *Registry) Run(ctx context.Context) {
 	// Можно добавить полноценный multiplexer для событий этого топика, но пока сосредоточимся на одном
-	go r.subscribers.OrderEvents.Subscribe(ctx, r.handlers.OrderEvents.OrderCreated.Handle)
+	go r.subscribers.OrderEvents.Subscribe(ctx, r.handlers.OrderEvents.Handle)
 }

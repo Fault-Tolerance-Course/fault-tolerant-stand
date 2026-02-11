@@ -104,10 +104,12 @@ services:
     environment:
       - HTTP_PORT=8080
       - GRPC_PORT=7002
-    ports:
-      - "7003:7002"
-      - "8083:8080"
+    deploy:
+      replicas: 3
     depends_on:
+      etcd:
+        condition: service_healthy
+        restart: true
       kafka:
         condition: service_healthy
         restart: true
@@ -149,7 +151,32 @@ services:
       # - AUTOHEAL_CONTAINER_LABEL=all
       - AUTOHEAL_INTERVAL=5 # Check every 5 seconds
 
-###########################################
+  etcd:
+    image: quay.io/coreos/etcd:v3.5.7
+    container_name: etcd
+    environment:
+      - ETCD_NAME=etcd0
+      - ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379
+      - ETCD_ADVERTISE_CLIENT_URLS=http://etcd:2379
+      - ETCD_INITIAL_ADVERTISE_PEER_URLS=http://etcd:2380
+      - ETCD_LISTEN_PEER_URLS=http://0.0.0.0:2380
+      - ETCD_INITIAL_CLUSTER=etcd0=http://etcd:2380
+      - ETCD_INITIAL_CLUSTER_STATE=new
+      - ETCD_INITIAL_CLUSTER_TOKEN=etcd-cluster-1
+    healthcheck:
+      test: [ "CMD", "etcdctl", "endpoint", "health", "--endpoints=http://localhost:2379" ]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    ports:
+      - "2379:2379" # client port
+      - "2380:2380" # peer port
+    networks:
+        - app-network
+
+
+  ###########################################
 #             DATABASES                   #
 ###########################################
 

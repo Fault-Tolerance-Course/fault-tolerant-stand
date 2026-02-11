@@ -10,6 +10,9 @@ import (
 	"payment-service/internal/application/service"
 	"payment-service/internal/infrastructure/dal"
 	"payment-service/internal/infrastructure/messagebus"
+	event_router "payment-service/internal/pkg/event-router"
+	"payment-service/internal/pkg/inbox"
+	"payment-service/internal/pkg/leader"
 
 	"payment-service/config"
 	"payment-service/internal/pkg/closer"
@@ -17,6 +20,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/not-for-prod/clay/server"
+	clientV3 "go.etcd.io/etcd/client/v3"
 )
 
 // App application
@@ -29,7 +33,15 @@ type App struct {
 
 	pool *pgxpool.Pool
 
+	etcdClient *clientV3.Client
+
 	dal *dal.Registry
+
+	eventRouter *event_router.EventRouter[string, []byte]
+
+	inbox *inbox.Inbox
+
+	electionManager leader.ElectionManager
 
 	services *service.Registry
 
@@ -50,6 +62,7 @@ func New(ctx context.Context) *App {
 // Run запуск приложения
 func (a *App) Run(ctx context.Context) {
 	a.messageBus.Run(ctx)
+	a.electionManager.Run(ctx)
 	if a.mainServer != nil {
 		go func() {
 			if err := a.mainServer.Run(); err != nil {
@@ -73,8 +86,12 @@ func (a *App) init(ctx context.Context) error {
 	initFuncs := []func(context.Context) error{
 		a.initMainServer,
 		a.initPostgres,
+		a.initEtcdClient,
 		a.initDAL,
+		a.initInbox,
+		a.initElectionManager,
 		a.initServices,
+		a.initHandlers,
 		a.initMessageBus,
 	}
 

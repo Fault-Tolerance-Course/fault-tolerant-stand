@@ -23,8 +23,13 @@ type Config struct {
 	GrpcServer GrpcServer `yaml:"grpc_server"`
 	HttpServer HttpServer `yaml:"http_server"`
 
-	Graceful Graceful          `yaml:"graceful"`
-	Kafka    Kafka             `yaml:"kafka"`
+	Graceful       Graceful       `yaml:"graceful"`
+	Kafka          Kafka          `yaml:"kafka"`
+	ETCD           ETCD           `yaml:"etcd"`
+	LeaderElection LeaderElection `yaml:"leader_election"`
+
+	Inbox Inbox `yaml:"inbox"`
+
 	Postgres Postgres          `yaml:"postgres"`
 	Targets  map[string]string `yaml:"service"`
 }
@@ -70,4 +75,8 @@ func (c Config) PostgresDSN() string {
 		c.Postgres.Port,
 		c.Postgres.Database,
 	)
+}
+
+func (c Config) InboxConfig(topic string) InboxHandler {
+	return c.Inbox.Topics[topic]
 }

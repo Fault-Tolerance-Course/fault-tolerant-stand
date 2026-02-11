@@ -13,7 +13,7 @@ func MustSyncProducer() sarama.SyncProducer {
 	saramaConfig := sarama.NewConfig()
 
 	saramaConfig.Producer.RequiredAcks = sarama.WaitForAll
-	saramaConfig.Producer.Return.Successes = true // не обязательно
+	saramaConfig.Producer.Return.Successes = true // для синхронного producer'а
 
 	saramaConfig.Net.DialTimeout = 5 * time.Second
 	saramaConfig.Net.WriteTimeout = 5 * time.Second

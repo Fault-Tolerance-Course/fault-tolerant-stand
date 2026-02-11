@@ -322,7 +322,7 @@ services:
       - app-network
 
   kafka:
-    image: confluentinc/cp-kafka:latest
+    image: confluentinc/cp-kafka:7.5.0
     container_name: kafka
     hostname: kafka
     ports:
@@ -336,6 +336,7 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: false
       KAFKA_LISTENERS: PLAINTEXT_INTERNAL://0.0.0.0:29092,PLAINTEXT_C://0.0.0.0:9093,PLAINTEXT_L://0.0.0.0:9092,
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT_INTERNAL://kafka:29092,PLAINTEXT_L://kafka:9092,PLAINTEXT_C://kafka:9093
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT_INTERNAL:PLAINTEXT,PLAINTEXT_L:PLAINTEXT,PLAINTEXT_C:PLAINTEXT
@@ -345,6 +346,24 @@ services:
       interval: 1s
       timeout: 2s
       retries: 5
+    networks:
+      - app-network
+
+  kafka-init:
+    image: confluentinc/cp-kafka:7.5.0
+    depends_on:
+      - kafka
+    entrypoint:
+      - sh
+      - -c
+      - |
+        echo "Waiting for Kafka..."
+        until kafka-topics --bootstrap-server kafka:9092 --list; do
+          sleep 1
+        done
+
+        echo "Creating topic order-events..."
+        kafka-topics --bootstrap-server kafka:9092 --create --topic order-events --partitions 3 --replication-factor 1
     networks:
       - app-network
 

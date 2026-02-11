@@ -1,6 +1,8 @@
 package consumer
 
 import (
+	"log/slog"
+
 	"github.com/IBM/sarama"
 )
 
@@ -32,17 +34,28 @@ func (g groupSubscriber) ConsumeClaim(session sarama.ConsumerGroupSession, claim
 			return ctx.Err()
 		}
 
+		slog.Info("claim",
+			"initial", claim.InitialOffset(),
+			"highest", claim.HighWaterMarkOffset(),
+		)
+
 		select {
 		case message, ok := <-claim.Messages():
 			if !ok {
 				return nil
 			}
 
+			slog.Info("Message",
+				"partition", message.Partition,
+				"offset", message.Offset,
+			)
+
 			err := g.messageHandler(ctx, session, message)
 			if ctx.Err() != nil {
 				return ctx.Err()
 			}
 			if err != nil {
+				slog.Error("handle kafka message", "error", err.Error())
 				return err
 			}
 
